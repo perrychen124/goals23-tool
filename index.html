@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2-3球评分工具 v2.0 - 带反馈优化</title>
+    <title>2-3球评分工具 v3.0 - 批量预测版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 30px; }
@@ -30,6 +30,8 @@
         .btn-secondary { background: #f0f0f0; color: #666; margin-top: 8px; }
         .btn-success { background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); color: white; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }
         .btn-warning { background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%); color: white; }
+        .btn-info { background: linear-gradient(135deg, #2196F3 0%, #03A9F4 100%); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+        .btn-danger { background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: white; }
         .result-card { background: white; border-radius: 12px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: none; }
         .result-card.show { display: block; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -59,16 +61,6 @@
         .rec-green { background: #E8F5E9; color: #2E7D32; }
         .rec-yellow { background: #FFF8E1; color: #F57F17; }
         .rec-red { background: #FFEBEE; color: #C62828; }
-        .feedback-section { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: 12px; padding: 18px; margin-top: 15px; border: 2px solid #2196F3; }
-        .feedback-title { font-size: 16px; font-weight: 600; color: #1565C0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .feedback-result { display: flex; gap: 10px; margin-bottom: 12px; }
-        .feedback-btn { flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .feedback-btn.selected { border-color: #2196F3; background: #E3F2FD; color: #1565C0; }
-        .feedback-btn.hit { border-color: #4CAF50; background: #E8F5E9; color: #2E7D32; }
-        .feedback-btn.miss { border-color: #F44336; background: #FFEBEE; color: #C62828; }
-        .score-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        .score-input-row input { flex: 1; text-align: center; font-size: 18px; font-weight: 600; }
-        .score-separator { display: flex; align-items: center; font-size: 20px; font-weight: 700; color: #666; }
         .stats-card { background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
         .stats-title { font-size: 16px; font-weight: 600; color: #F57F17; margin-bottom: 12px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -106,26 +98,57 @@
         .export-btn { background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%); color: white; margin-top: 10px; }
         .clear-btn { background: #f0f0f0; color: #666; margin-top: 8px; }
         .pending-badge { display: inline-block; background: #FFC107; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        .queue-badge { display: inline-block; background: #f44336; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        .queue-item { background: #f8f9fa; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; border-left: 4px solid #667eea; }
+        .queue-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .queue-item-title { font-size: 14px; font-weight: 600; }
+        .queue-item-meta { font-size: 11px; color: #999; }
+        .queue-item-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .queue-item-actions button { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        .btn-remove { background: #ffebee; color: #c62828; }
+        .btn-view { background: #e3f2fd; color: #1565c0; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+        .filter-btn { padding: 8px 16px; border: 1.5px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .filter-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: transparent; }
+        .batch-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .batch-actions .btn { flex: 1; margin-top: 0; font-size: 14px; padding: 12px; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; transition: all 0.3s ease; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #c62828; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+        .modal-body { margin-bottom: 16px; }
+        .modal-footer { display: flex; gap: 10px; }
+        .modal-footer button { flex: 1; }
+        .feedback-modal-item { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 10px; }
+        .feedback-modal-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+        .feedback-modal-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
+        .feedback-modal-inputs input { flex: 1; text-align: center; font-size: 16px; font-weight: 600; padding: 10px; }
+        .feedback-modal-btns { display: flex; gap: 8px; }
+        .feedback-modal-btns button { flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .feedback-modal-btns button.hit-active { border-color: #4CAF50; background: #E8F5E9; color: #2E7D32; }
+        .feedback-modal-btns button.miss-active { border-color: #F44336; background: #FFEBEE; color: #C62828; }
+        .saved-indicator { display: inline-flex; align-items: center; gap: 4px; background: #E8F5E9; color: #2E7D32; font-size: 11px; padding: 4px 10px; border-radius: 12px; margin-top: 8px; }
         @media (max-width: 400px) { .header h1 { font-size: 18px; } .score-number { font-size: 40px; } .prob-value { font-size: 24px; } }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="header">
         <h1>⚽ 2-3球评分工具</h1>
-        <p>基于10维度加权模型 · 科学筛选高概率比赛</p>
-        <span class="version-badge">v2.0 反馈优化版</span>
+        <p>基于10维度加权模型 · 批量预测 · 科学筛选</p>
+        <span class="version-badge">v3.0 批量预测版</span>
     </div>
-    
+
     <div class="container">
         <div class="tips-card">
-            <h3>📋 使用说明</h3>
-            <p>1. 从雷速体育APP查看比赛盘口数据<br>
-               2. 填写比赛信息和盘口数据<br>
-               3. 点击"计算评分"获取预测结果<br>
-               4. 赛后点击"记录赛果"反馈实际结果<br>
-               5. 每周截图历史记录给我优化模型</p>
+            <h3>📋 使用流程</h3>
+            <p><strong>赛前：</strong>填写比赛 → 点击"添加预测" → 重复添加多场比赛 → 查看预测队列<br>
+               <strong>赛后：</strong>打开"历史记录" → 筛选"待反馈" → 逐条输入比分和结果</p>
         </div>
-        
+
         <div class="stats-card" id="statsPanel" style="display:none;">
             <div class="stats-title">📊 预测准确率统计</div>
             <div class="stats-grid">
@@ -147,19 +170,20 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="tab-bar">
             <button class="tab active" onclick="switchTab('calc')">📝 评分计算</button>
+            <button class="tab" onclick="switchTab('queue')">📋 预测队列 <span id="queueBadge" class="queue-badge" style="display:none;">0</span></button>
             <button class="tab" onclick="switchTab('history')">📊 历史记录</button>
         </div>
-        
+
         <div id="tab-calc" class="tab-content active">
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E3F2FD;">📍</span>
                     比赛基本信息
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">联赛<span class="required">*</span></label>
                     <select id="league">
@@ -179,7 +203,7 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
-                
+
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队<span class="required">*</span></label>
@@ -191,13 +215,13 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">📈</span>
                     球队数据（近5场场均）
                 </div>
-                
+
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队进球<span class="hint">最佳1.0-2.0</span></label>
@@ -208,7 +232,7 @@
                         <input type="number" id="awayGoals" step="0.1" min="0" max="10" placeholder="1.0">
                     </div>
                 </div>
-                
+
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队失球<span class="hint">最佳1.0-1.5</span></label>
@@ -219,19 +243,19 @@
                         <input type="number" id="awayConcede" step="0.1" min="0" max="10" placeholder="1.3">
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">历史交锋2-3球占比<span class="hint">0-1之间，如0.6</span></label>
                     <input type="number" id="h2hRatio" step="0.1" min="0" max="1" placeholder="0.6">
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#FFF3E0;">🎯</span>
                     盘口数据
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">大小球盘口<span class="required">*</span><span class="hint">2/2.5球最佳</span></label>
                     <select id="ouLine">
@@ -245,7 +269,7 @@
                         <option value="3/3.5球">3/3.5球（不推荐）</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">让球盘口<span class="required">*</span><span class="hint">半球最佳</span></label>
                     <select id="ahLine">
@@ -261,7 +285,7 @@
                         <option value="两球+">两球+</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">盘口联动关系<span class="hint">让球与大小球的组合</span></label>
                     <select id="ouAhLink">
@@ -274,13 +298,13 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#F3E5F5;">⚡</span>
                     其他因素
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">战意与赛程</label>
                     <select id="context">
@@ -294,16 +318,17 @@
                     </select>
                 </div>
             </div>
-            
-            <button class="btn btn-primary" onclick="calculate()">🚀 计算评分</button>
+
+            <button class="btn btn-success" onclick="addToQueue()">➕ 添加到预测列表</button>
+            <button class="btn btn-primary" onclick="calculate()">🚀 仅计算评分（不保存）</button>
             <button class="btn btn-secondary" onclick="resetForm()">🔄 重置表单</button>
-            
+
             <div id="result" class="result-card">
                 <div class="score-display">
                     <div class="score-number" id="scoreNum">0.00</div>
                     <div class="score-grade" id="scoreGrade">--</div>
                 </div>
-                
+
                 <div class="prob-display">
                     <div class="prob-item">
                         <div class="prob-value prob-green" id="prob23">0%</div>
@@ -318,28 +343,16 @@
                         <div class="prob-label">0-1球风险</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-list" id="detailList"></div>
-                
+
                 <div class="recommendation" id="recommendation"></div>
-                
-                <div class="feedback-section" id="feedbackSection" style="display:none;">
-                    <div class="feedback-title">📝 赛后反馈</div>
-                    <div style="font-size:13px;color:#666;margin-bottom:10px;">
-                        比赛结束后，请输入实际比分并选择结果：
-                    </div>
-                    <div class="score-input-row">
-                        <input type="number" id="actualHomeGoals" placeholder="主队" min="0">
-                        <div class="score-separator">:</div>
-                        <input type="number" id="actualAwayGoals" placeholder="客队" min="0">
-                    </div>
-                    <div class="feedback-result">
-                        <button class="feedback-btn" onclick="recordResult('hit')" id="btnHit">✅ 命中(2-3球)</button>
-                        <button class="feedback-btn" onclick="recordResult('miss')" id="btnMiss">❌ 未命中</button>
-                    </div>
+
+                <div id="savedIndicator" class="saved-indicator" style="display:none;">
+                    ✅ 已保存到预测队列
                 </div>
             </div>
-            
+
             <div class="card" style="margin-top:15px;">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">💡</span>
@@ -373,26 +386,72 @@
                 </div>
             </div>
         </div>
-        
+
+        <div id="tab-queue" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon" style="background:#E3F2FD;">📋</span>
+                    今日预测队列
+                    <span id="queueCountBadge" class="pending-badge" style="display:none;">0</span>
+                </div>
+                <div id="queueList">
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>预测队列为空</p>
+                        <p style="font-size:12px; margin-top:5px;">在"评分计算"页面添加比赛后，将显示在这里</p>
+                    </div>
+                </div>
+                <div class="batch-actions" id="queueActions" style="display:none;">
+                    <button class="btn btn-primary" onclick="switchTab('history')">📊 去历史记录反馈</button>
+                    <button class="btn btn-danger" onclick="clearQueue()">🗑️ 清空队列</button>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-history" class="tab-content">
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E3F2FD;">📊</span>
                     预测历史记录
                 </div>
+
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="filterHistory('all')">全部</button>
+                    <button class="filter-btn" onclick="filterHistory('pending')">待反馈 <span id="pendingFilterBadge" class="pending-badge" style="display:none;">0</span></button>
+                    <button class="filter-btn" onclick="filterHistory('hit')">✅ 命中</button>
+                    <button class="filter-btn" onclick="filterHistory('miss')">❌ 未命中</button>
+                </div>
+
                 <div id="historyList">
                     <div class="empty-state">
                         <div class="icon">📋</div>
                         <p>暂无记录</p>
-                        <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛并记录赛果后，数据将显示在这里</p>
+                        <p style="font-size:12px; margin-top:5px;">添加预测并记录赛果后，数据将显示在这里</p>
                     </div>
                 </div>
-                <button class="btn export-btn" onclick="exportData()">📥 导出数据(CSV)</button>
-                <button class="btn clear-btn" onclick="clearHistory()">🗑️ 清空记录</button>
+
+                <div class="batch-actions">
+                    <button class="btn export-btn" onclick="exportData()">📥 导出数据(CSV)</button>
+                    <button class="btn clear-btn" onclick="clearHistory()">🗑️ 清空记录</button>
+                </div>
             </div>
         </div>
     </div>
-        <script>
+
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-content">
+            <div class="modal-header">📝 记录赛果</div>
+            <div class="modal-body" id="feedbackModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()">取消</button>
+                <button class="btn btn-success" onclick="submitBatchFeedback()">✅ 提交反馈</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
         const scoringConfig = {
             leagues: {
                 "法甲": 0.95, "意甲": 0.90, "西甲": 0.80, "英超": 0.65,
@@ -420,107 +479,115 @@
                 "一周双赛": 0.80, "密集赛程": 0.65
             }
         };
-        
+
         let currentPrediction = null;
-        
+        let currentFilter = 'all';
+        let batchFeedbackData = [];
+
         function getRangeScore(value, ranges) {
             for (let r of ranges) {
                 if (value >= r.min && value < r.max) return r.score;
             }
             return 0.5;
         }
-        
-        function calculate() {
-            const league = document.getElementById('league').value;
-            const homeTeam = document.getElementById('homeTeam').value;
-            const awayTeam = document.getElementById('awayTeam').value;
-            const homeGoals = parseFloat(document.getElementById('homeGoals').value) || 1.5;
-            const awayGoals = parseFloat(document.getElementById('awayGoals').value) || 1.0;
-            const homeConcede = parseFloat(document.getElementById('homeConcede').value) || 1.2;
-            const awayConcede = parseFloat(document.getElementById('awayConcede').value) || 1.2;
-            const h2hRatio = parseFloat(document.getElementById('h2hRatio').value) || 0.5;
-            const ouLine = document.getElementById('ouLine').value;
-            const ahLine = document.getElementById('ahLine').value;
-            const ouAhLink = document.getElementById('ouAhLink').value;
-            const context = document.getElementById('context').value;
-            
-            if (!league || !homeTeam || !awayTeam || !ouLine || !ahLine) {
-                alert('请填写必填项：联赛、主队、客队、大小球盘口、让球盘口');
-                return;
+
+        function getInputs() {
+            return {
+                league: document.getElementById('league').value,
+                homeTeam: document.getElementById('homeTeam').value.trim(),
+                awayTeam: document.getElementById('awayTeam').value.trim(),
+                homeGoals: parseFloat(document.getElementById('homeGoals').value) || 1.5,
+                awayGoals: parseFloat(document.getElementById('awayGoals').value) || 1.0,
+                homeConcede: parseFloat(document.getElementById('homeConcede').value) || 1.2,
+                awayConcede: parseFloat(document.getElementById('awayConcede').value) || 1.2,
+                h2hRatio: parseFloat(document.getElementById('h2hRatio').value) || 0.5,
+                ouLine: document.getElementById('ouLine').value,
+                ahLine: document.getElementById('ahLine').value,
+                ouAhLink: document.getElementById('ouAhLink').value,
+                context: document.getElementById('context').value
+            };
+        }
+
+        function validateInputs(inputs) {
+            if (!inputs.league || !inputs.homeTeam || !inputs.awayTeam || !inputs.ouLine || !inputs.ahLine) {
+                return '请填写必填项：联赛、主队、客队、大小球盘口、让球盘口';
             }
-            
+            return null;
+        }
+
+        function performCalculation(inputs) {
             const scores = {};
-            
+
             scores['联赛特征'] = {
-                score: scoringConfig.leagues[league] || 0.60,
+                score: scoringConfig.leagues[inputs.league] || 0.60,
                 weight: 0.10
             };
-            
+
             scores['主队进攻'] = {
-                score: getRangeScore(homeGoals, [
+                score: getRangeScore(inputs.homeGoals, [
                     {min:0, max:0.5, score:0.20}, {min:0.5, max:1.0, score:0.55},
                     {min:1.0, max:1.5, score:0.90}, {min:1.5, max:2.0, score:0.95},
                     {min:2.0, max:2.5, score:0.80}, {min:2.5, max:10, score:0.40}
                 ]),
                 weight: 0.12
             };
-            
+
             scores['客队进攻'] = {
-                score: getRangeScore(awayGoals, [
+                score: getRangeScore(inputs.awayGoals, [
                     {min:0, max:0.5, score:0.35}, {min:0.5, max:1.0, score:0.85},
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.80},
                     {min:2.0, max:10, score:0.45}
                 ]),
                 weight: 0.10
             };
-            
+
             scores['主队防守'] = {
-                score: getRangeScore(homeConcede, [
+                score: getRangeScore(inputs.homeConcede, [
                     {min:0, max:0.5, score:0.30}, {min:0.5, max:1.0, score:0.85},
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.80},
                     {min:2.0, max:10, score:0.35}
                 ]),
                 weight: 0.08
             };
-            
+
             scores['客队防守'] = {
-                score: getRangeScore(awayConcede, [
+                score: getRangeScore(inputs.awayConcede, [
                     {min:0, max:0.5, score:0.25}, {min:0.5, max:1.0, score:0.80},
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.85},
                     {min:2.0, max:10, score:0.40}
                 ]),
                 weight: 0.08
             };
-            
+
             scores['历史交锋'] = {
-                score: getRangeScore(h2hRatio, [
+                score: getRangeScore(inputs.h2hRatio, [
                     {min:0, max:0.2, score:0.20}, {min:0.2, max:0.4, score:0.60},
                     {min:0.4, max:0.6, score:0.85}, {min:0.6, max:0.8, score:0.95},
                     {min:0.8, max:1.0, score:0.90}
                 ]),
                 weight: 0.12
             };
-            
+
             scores['大小球盘口'] = {
-                score: scoringConfig.ouLines[ouLine] || 0.90,
+                score: scoringConfig.ouLines[inputs.ouLine] || 0.90,
                 weight: 0.15
             };
-            
+
             scores['让球盘口'] = {
-                score: scoringConfig.ahLines[ahLine] || 0.95,
+                score: scoringConfig.ahLines[inputs.ahLine] || 0.95,
                 weight: 0.10
             };
-            
+
             scores['盘口联动'] = {
-                score: scoringConfig.ouAhLinks[ouAhLink] || 0.90,
+                score: scoringConfig.ouAhLinks[inputs.ouAhLink] || 0.90,
                 weight: 0.08
             };
-            
+
             scores['战意赛程'] = {
-                score: scoringConfig.contexts[context] || 0.90,
+                score: scoringConfig.contexts[inputs.context] || 0.90,
                 weight: 0.07
             };
-            
+
             let totalScore = 0;
             let details = [];
             for (let [name, data] of Object.entries(scores)) {
@@ -533,56 +600,47 @@
                     weighted: weighted
                 });
             }
-            
+
             totalScore = Math.round(totalScore * 1000) / 1000;
-            
+
             let grade, gradeClass, prob23, probOver, probUnder, recText, recClass;
             if (totalScore >= 0.85) {
-                grade = 'A+ 强烈推荐';
-                gradeClass = 'grade-A-plus';
+                grade = 'A+ 强烈推荐'; gradeClass = 'grade-A-plus';
                 prob23 = 55; probOver = 30; probUnder = 15;
                 recText = '✅ 强烈推荐投注2-3球！这场比赛的各项指标高度匹配2-3球模型，概率极高。建议重点关注。';
                 recClass = 'rec-green';
             } else if (totalScore >= 0.75) {
-                grade = 'A 推荐';
-                gradeClass = 'grade-A';
+                grade = 'A 推荐'; gradeClass = 'grade-A';
                 prob23 = 48; probOver = 35; probUnder = 17;
                 recText = '✓ 推荐投注2-3球。比赛条件较好，2-3球概率较高。可以正常投注。';
                 recClass = 'rec-green';
             } else if (totalScore >= 0.65) {
-                grade = 'B 可考虑';
-                gradeClass = 'grade-B';
+                grade = 'B 可考虑'; gradeClass = 'grade-B';
                 prob23 = 42; probOver = 39; probUnder = 19;
                 recText = '△ 可考虑投注，但需谨慎。2-3球概率中等，建议小额试探或观察临场变化。';
                 recClass = 'rec-yellow';
             } else if (totalScore >= 0.55) {
-                grade = 'C 谨慎';
-                gradeClass = 'grade-C';
+                grade = 'C 谨慎'; gradeClass = 'grade-C';
                 prob23 = 35; probOver = 45; probUnder = 20;
                 recText = '⚠️ 谨慎对待。2-3球概率偏低，偏离风险较高。不建议单独投注。';
                 recClass = 'rec-yellow';
             } else {
-                grade = 'D 不推荐';
-                gradeClass = 'grade-D';
+                grade = 'D 不推荐'; gradeClass = 'grade-D';
                 prob23 = 25; probOver = 50; probUnder = 25;
                 recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
                 recClass = 'rec-red';
             }
-            
-            const ouLineValue = parseFloat(ouLine.replace(/[^0-9.]/g, '')) || 2.5;
+
+            const ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
             if (ouLineValue >= 3) {
-                prob23 -= 10;
-                probOver += 8;
-                probUnder += 2;
+                prob23 -= 10; probOver += 8; probUnder += 2;
             } else if (ouLineValue <= 2.25) {
-                prob23 += 5;
-                probOver -= 3;
-                probUnder -= 2;
+                prob23 += 5; probOver -= 3; probUnder -= 2;
             }
-            
-            currentPrediction = {
-                match: `${homeTeam} vs ${awayTeam}`,
-                league: league,
+
+            return {
+                match: `${inputs.homeTeam} vs ${inputs.awayTeam}`,
+                league: inputs.league,
                 score: totalScore,
                 grade: grade,
                 gradeClass: gradeClass,
@@ -590,28 +648,64 @@
                 probOver: probOver,
                 probUnder: probUnder,
                 recommendation: recText,
+                recClass: recClass,
                 details: details,
-                inputs: {
-                    homeGoals, awayGoals, homeConcede, awayConcede,
-                    h2hRatio, ouLine, ahLine, ouAhLink, context
-                },
+                inputs: inputs,
                 time: new Date().toLocaleString('zh-CN'),
                 result: null,
                 actualScore: null,
+                totalGoals: null,
                 isHit: null
             };
-            
-            document.getElementById('scoreNum').textContent = totalScore.toFixed(3);
+        }
+
+        function calculate() {
+            const inputs = getInputs();
+            const error = validateInputs(inputs);
+            if (error) {
+                showToast(error, 'error');
+                return;
+            }
+
+            const result = performCalculation(inputs);
+            currentPrediction = result;
+
+            displayResult(result, false);
+        }
+
+        function addToQueue() {
+            const inputs = getInputs();
+            const error = validateInputs(inputs);
+            if (error) {
+                showToast(error, 'error');
+                return;
+            }
+
+            const result = performCalculation(inputs);
+
+            let queue = JSON.parse(localStorage.getItem('goals23_queue_v3') || '[]');
+            queue.push(result);
+            localStorage.setItem('goals23_queue_v3', JSON.stringify(queue));
+
+            saveHistory(result);
+
+            displayResult(result, true);
+            updateQueueBadge();
+            showToast(`✅ 已添加 "${result.match}" 到预测队列`);
+        }
+
+        function displayResult(result, saved) {
+            document.getElementById('scoreNum').textContent = result.score.toFixed(3);
             const gradeEl = document.getElementById('scoreGrade');
-            gradeEl.textContent = grade;
-            gradeEl.className = 'score-grade ' + gradeClass;
-            
-            document.getElementById('prob23').textContent = prob23 + '%';
-            document.getElementById('probOver').textContent = probOver + '%';
-            document.getElementById('probUnder').textContent = probUnder + '%';
-            
+            gradeEl.textContent = result.grade;
+            gradeEl.className = 'score-grade ' + result.gradeClass;
+
+            document.getElementById('prob23').textContent = result.prob23 + '%';
+            document.getElementById('probOver').textContent = result.probOver + '%';
+            document.getElementById('probUnder').textContent = result.probUnder + '%';
+
             const detailList = document.getElementById('detailList');
-            detailList.innerHTML = details.map(d => {
+            detailList.innerHTML = result.details.map(d => {
                 const barColor = d.raw >= 0.8 ? '#4CAF50' : d.raw >= 0.6 ? '#FFC107' : '#F44336';
                 return `<div class="detail-item">
                     <span class="detail-name">${d.name}</span>
@@ -623,96 +717,105 @@
                     </div>
                 </div>`;
             }).join('');
-            
+
             const recEl = document.getElementById('recommendation');
-            recEl.className = 'recommendation ' + recClass;
-            recEl.innerHTML = `<strong>投注建议：</strong><br>${recText}`;
-            
-            document.getElementById('feedbackSection').style.display = 'block';
-            
+            recEl.className = 'recommendation ' + result.recClass;
+            recEl.innerHTML = `<strong>投注建议：</strong><br>${result.recommendation}`;
+
+            const savedIndicator = document.getElementById('savedIndicator');
+            savedIndicator.style.display = saved ? 'inline-flex' : 'none';
+
             document.getElementById('result').classList.add('show');
-            
+
             setTimeout(() => {
                 document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
             }, 100);
         }
-                   function recordResult(result) {
-            if (!currentPrediction) {
-                alert('请先进行预测评分');
-                return;
-            }
-            
-            const homeGoals = parseInt(document.getElementById('actualHomeGoals').value);
-            const awayGoals = parseInt(document.getElementById('actualAwayGoals').value);
-            
-            if (isNaN(homeGoals) || isNaN(awayGoals)) {
-                alert('请输入完整的实际比分');
-                return;
-            }
-            
-            const totalGoals = homeGoals + awayGoals;
-            const is23 = totalGoals === 2 || totalGoals === 3;
-            
-            currentPrediction.actualScore = `${homeGoals}:${awayGoals}`;
-            currentPrediction.totalGoals = totalGoals;
-            currentPrediction.isHit = result === 'hit' && is23;
-            currentPrediction.result = result;
-            
-            saveHistory(currentPrediction);
-            
-            document.querySelectorAll('.feedback-btn').forEach(btn => btn.classList.remove('selected', 'hit', 'miss'));
-            if (result === 'hit') {
-                document.getElementById('btnHit').classList.add('selected', 'hit');
-            } else {
-                document.getElementById('btnMiss').classList.add('selected', 'miss');
-            }
-            
-            alert(`已记录赛果！\n比赛：${currentPrediction.match}\n预测：${currentPrediction.grade}\n实际比分：${homeGoals}:${awayGoals} (总进球${totalGoals})\n结果：${currentPrediction.isHit ? '✅ 命中' : '❌ 未命中'}`);
-            
-            updateStats();
-            currentPrediction = null;
-        }
-        
+
         function saveHistory(record) {
-            let history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
             history.unshift(record);
-            if (history.length > 100) history = history.slice(0, 100);
-            localStorage.setItem('goals23_history_v2', JSON.stringify(history));
+            if (history.length > 200) history = history.slice(0, 200);
+            localStorage.setItem('goals23_history_v3', JSON.stringify(history));
             updateStats();
+            updatePendingBadge();
         }
-        
+
+        function updateHistoryRecord(index, updates) {
+            let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            if (index >= 0 && index < history.length) {
+                Object.assign(history[index], updates);
+                localStorage.setItem('goals23_history_v3', JSON.stringify(history));
+            }
+            updateStats();
+            updatePendingBadge();
+            renderHistory();
+        }
+
         function updateStats() {
-            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            const history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
             const completed = history.filter(h => h.result !== null);
             const hits = completed.filter(h => h.isHit).length;
             const misses = completed.filter(h => !h.isHit).length;
             const total = completed.length;
             const rate = total > 0 ? Math.round((hits / total) * 100) : 0;
-            
+
             document.getElementById('totalPredictions').textContent = total;
             document.getElementById('hitCount').textContent = hits;
             document.getElementById('missCount').textContent = misses;
             document.getElementById('hitRate').textContent = rate + '%';
-            
+
             if (total > 0) {
                 document.getElementById('statsPanel').style.display = 'block';
             }
         }
-        
-        function renderHistory() {
-            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
-            const listEl = document.getElementById('historyList');
-            
-            if (history.length === 0) {
+
+        function updateQueueBadge() {
+            const queue = JSON.parse(localStorage.getItem('goals23_queue_v3') || '[]');
+            const badge = document.getElementById('queueBadge');
+            const countBadge = document.getElementById('queueCountBadge');
+
+            if (queue.length > 0) {
+                badge.textContent = queue.length;
+                badge.style.display = 'inline-block';
+                countBadge.textContent = queue.length;
+                countBadge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+                countBadge.style.display = 'none';
+            }
+        }
+
+        function updatePendingBadge() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            const pending = history.filter(h => h.result === null).length;
+            const badge = document.getElementById('pendingFilterBadge');
+
+            if (pending > 0) {
+                badge.textContent = pending;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderQueue() {
+            const queue = JSON.parse(localStorage.getItem('goals23_queue_v3') || '[]');
+            const listEl = document.getElementById('queueList');
+            const actionsEl = document.getElementById('queueActions');
+
+            if (queue.length === 0) {
                 listEl.innerHTML = `<div class="empty-state">
                     <div class="icon">📋</div>
-                    <p>暂无记录</p>
-                    <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛并记录赛果后，数据将显示在这里</p>
+                    <p>预测队列为空</p>
+                    <p style="font-size:12px; margin-top:5px;">在"评分计算"页面添加比赛后，将显示在这里</p>
                 </div>`;
+                actionsEl.style.display = 'none';
                 return;
             }
-            
-            listEl.innerHTML = history.map((h, idx) => {
+
+            actionsEl.style.display = 'flex';
+            listEl.innerHTML = queue.map((item, idx) => {
                 const gradeClassMap = {
                     'A+ 强烈推荐': 'grade-A-plus',
                     'A 推荐': 'grade-A',
@@ -720,47 +823,230 @@
                     'C 谨慎': 'grade-C',
                     'D 不推荐': 'grade-D'
                 };
-                
+                const shortGrade = item.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D');
+
+                return `<div class="queue-item">
+                    <div class="queue-item-header">
+                        <div>
+                            <div class="queue-item-title">${item.match}</div>
+                            <div class="queue-item-meta">${item.league} · 评分 ${item.score.toFixed(3)}</div>
+                        </div>
+                        <span class="history-grade ${gradeClassMap[item.grade] || 'grade-B'}">${shortGrade}</span>
+                    </div>
+                    <div style="font-size:12px;color:#666;margin-top:4px;">
+                        2-3球概率: <strong style="color:#4CAF50;">${item.prob23}%</strong> · 
+                        大小球: ${item.inputs.ouLine} · 让球: ${item.inputs.ahLine}
+                    </div>
+                    <div class="queue-item-actions">
+                        <button class="btn-view" onclick="viewQueueItem(${idx})">👁️ 查看详情</button>
+                        <button class="btn-remove" onclick="removeQueueItem(${idx})">🗑️ 移除</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function viewQueueItem(idx) {
+            const queue = JSON.parse(localStorage.getItem('goals23_queue_v3') || '[]');
+            if (idx >= 0 && idx < queue.length) {
+                currentPrediction = queue[idx];
+                displayResult(queue[idx], false);
+                switchTab('calc');
+            }
+        }
+
+        function removeQueueItem(idx) {
+            let queue = JSON.parse(localStorage.getItem('goals23_queue_v3') || '[]');
+            if (idx >= 0 && idx < queue.length) {
+                const removed = queue.splice(idx, 1)[0];
+                localStorage.setItem('goals23_queue_v3', JSON.stringify(queue));
+
+                let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+                history = history.filter(h => !(h.match === removed.match && h.time === removed.time && h.result === null));
+                localStorage.setItem('goals23_history_v3', JSON.stringify(history));
+
+                updateQueueBadge();
+                renderQueue();
+                updatePendingBadge();
+                showToast('已移除比赛');
+            }
+        }
+
+        function clearQueue() {
+            if (confirm('确定清空预测队列吗？已保存到历史记录的数据将保留。')) {
+                localStorage.removeItem('goals23_queue_v3');
+                updateQueueBadge();
+                renderQueue();
+                showToast('预测队列已清空');
+            }
+        }
+
+        function filterHistory(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            const listEl = document.getElementById('historyList');
+
+            let filtered = history;
+            if (currentFilter === 'pending') {
+                filtered = history.filter(h => h.result === null);
+            } else if (currentFilter === 'hit') {
+                filtered = history.filter(h => h.isHit === true);
+            } else if (currentFilter === 'miss') {
+                filtered = history.filter(h => h.isHit === false);
+            }
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div class="empty-state">
+                    <div class="icon">📋</div>
+                    <p>暂无记录</p>
+                    <p style="font-size:12px; margin-top:5px;">添加预测并记录赛果后，数据将显示在这里</p>
+                </div>`;
+                return;
+            }
+
+            const gradeClassMap = {
+                'A+ 强烈推荐': 'grade-A-plus',
+                'A 推荐': 'grade-A',
+                'B 可考虑': 'grade-B',
+                'C 谨慎': 'grade-C',
+                'D 不推荐': 'grade-D'
+            };
+
+            listEl.innerHTML = filtered.map((h, idx) => {
+                const originalIndex = history.findIndex(item => item.time === h.time && item.match === h.match);
+                const shortGrade = h.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D');
+
                 let resultHtml = '';
+                let feedbackBtn = '';
+
                 if (h.result === null) {
                     resultHtml = `<span class="history-result result-pending">待反馈</span>`;
+                    feedbackBtn = `<button class="btn btn-info" style="margin-top:8px;font-size:12px;padding:8px;" onclick="openFeedbackModal(${originalIndex})">📝 记录赛果</button>`;
                 } else if (h.isHit) {
                     resultHtml = `<span class="history-result result-hit">✅ 命中 ${h.actualScore}</span>`;
                 } else {
                     resultHtml = `<span class="history-result result-miss">❌ 未中 ${h.actualScore}</span>`;
                 }
-                
-                return `<div class="history-item">
-                    <div>
-                        <div class="history-match">${h.match}</div>
-                        <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+
+                return `<div class="history-item" style="flex-direction:column;align-items:flex-start;">
+                    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                        <div>
+                            <div class="history-match">${h.match}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <span class="history-score">${h.score.toFixed(3)}</span>
+                            <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${shortGrade}</span>
+                            ${resultHtml}
+                        </div>
                     </div>
-                    <div style="display:flex;align-items:center;">
-                        <span class="history-score">${h.score.toFixed(3)}</span>
-                        <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${h.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D')}</span>
-                        ${resultHtml}
-                    </div>
+                    ${feedbackBtn}
                 </div>`;
             }).join('');
         }
-        
-        function exportData() {
-            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
-            if (history.length === 0) {
-                alert('暂无数据可导出');
+
+        function openFeedbackModal(index) {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            if (index < 0 || index >= history.length) return;
+
+            const item = history[index];
+            batchFeedbackData = [{ index: index, item: item }];
+
+            const modalBody = document.getElementById('feedbackModalBody');
+            modalBody.innerHTML = `
+                <div class="feedback-modal-item">
+                    <div class="feedback-modal-title">${item.match} (${item.league})</div>
+                    <div style="font-size:12px;color:#666;margin-bottom:10px;">预测: ${item.grade} · 2-3球概率 ${item.prob23}%</div>
+                    <div class="feedback-modal-inputs">
+                        <input type="number" id="fb-home-${index}" placeholder="主队" min="0" value="">
+                        <div class="score-separator">:</div>
+                        <input type="number" id="fb-away-${index}" placeholder="客队" min="0" value="">
+                    </div>
+                    <div class="feedback-modal-btns">
+                        <button onclick="selectFeedbackResult(${index}, 'hit')" id="fb-hit-${index}">✅ 命中(2-3球)</button>
+                        <button onclick="selectFeedbackResult(${index}, 'miss')" id="fb-miss-${index}">❌ 未命中</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('feedbackModal').classList.add('show');
+        }
+
+        function selectFeedbackResult(index, result) {
+            const hitBtn = document.getElementById(`fb-hit-${index}`);
+            const missBtn = document.getElementById(`fb-miss-${index}`);
+
+            if (result === 'hit') {
+                hitBtn.classList.add('hit-active');
+                missBtn.classList.remove('miss-active');
+            } else {
+                missBtn.classList.add('miss-active');
+                hitBtn.classList.remove('hit-active');
+            }
+
+            batchFeedbackData[0].result = result;
+        }
+
+        function submitBatchFeedback() {
+            if (batchFeedbackData.length === 0) return;
+
+            const data = batchFeedbackData[0];
+            const index = data.index;
+            const homeGoals = parseInt(document.getElementById(`fb-home-${index}`).value);
+            const awayGoals = parseInt(document.getElementById(`fb-away-${index}`).value);
+
+            if (isNaN(homeGoals) || isNaN(awayGoals)) {
+                showToast('请输入完整的实际比分', 'error');
                 return;
             }
-            
-            let csv = '\uFEFF';
-            csv += '日期,联赛,比赛,预测评分,推荐等级,2-3球概率,实际比分,总进球,是否命中\n';
-            
+
+            if (!data.result) {
+                showToast('请选择命中或未命中', 'error');
+                return;
+            }
+
+            const totalGoals = homeGoals + awayGoals;
+            const is23 = totalGoals === 2 || totalGoals === 3;
+            const isHit = data.result === 'hit' && is23;
+
+            updateHistoryRecord(index, {
+                actualScore: `${homeGoals}:${awayGoals}`,
+                totalGoals: totalGoals,
+                result: data.result,
+                isHit: isHit
+            });
+
+            closeFeedbackModal();
+            showToast(`已记录！${data.item.match} ${homeGoals}:${awayGoals} ${isHit ? '✅ 命中' : '❌ 未命中'}`);
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('show');
+            batchFeedbackData = [];
+        }
+
+        function exportData() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            if (history.length === 0) {
+                showToast('暂无数据可导出', 'error');
+                return;
+            }
+
+            let csv = '﻿';
+            csv += '日期,联赛,比赛,预测评分,推荐等级,2-3球概率,大小球盘口,让球盘口,实际比分,总进球,是否命中\n';
+
             history.forEach(h => {
                 const hit = h.result === null ? '待反馈' : (h.isHit ? '命中' : '未命中');
                 const score = h.actualScore || '-';
                 const total = h.totalGoals || '-';
-                csv += `${h.time},${h.league},${h.match},${h.score.toFixed(3)},${h.grade},${h.prob23}%,${score},${total},${hit}\n`;
+                csv += `${h.time},${h.league},${h.match},${h.score.toFixed(3)},${h.grade},${h.prob23}%,${h.inputs.ouLine},${h.inputs.ahLine},${score},${total},${hit}\n`;
             });
-            
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
@@ -770,21 +1056,22 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            alert('数据已导出！\n文件名：goals23_data_日期.csv\n\n请将CSV文件发送给我，我会分析数据并优化模型。');
+
+            showToast('数据已导出！文件名：goals23_data_日期.csv');
         }
-        
+
         function clearHistory() {
             if (confirm('确定清空所有历史记录吗？此操作不可恢复！')) {
-                localStorage.removeItem('goals23_history_v2');
+                localStorage.removeItem('goals23_history_v3');
                 updateStats();
+                updatePendingBadge();
                 renderHistory();
-                alert('历史记录已清空');
+                showToast('历史记录已清空');
             }
         }
-        
+
         function resetForm() {
-            document.querySelectorAll('input, select').forEach(el => {
+            document.querySelectorAll('#tab-calc input, #tab-calc select').forEach(el => {
                 if (el.tagName === 'SELECT') {
                     el.selectedIndex = 0;
                 } else {
@@ -792,27 +1079,42 @@
                 }
             });
             document.getElementById('result').classList.remove('show');
-            document.getElementById('feedbackSection').style.display = 'none';
+            document.getElementById('savedIndicator').style.display = 'none';
             currentPrediction = null;
         }
-        
+
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
+
             if (tab === 'calc') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('tab-calc').classList.add('active');
-            } else {
+            } else if (tab === 'queue') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('tab-queue').classList.add('active');
+                renderQueue();
+            } else {
+                document.querySelectorAll('.tab')[2].classList.add('active');
                 document.getElementById('tab-history').classList.add('active');
                 renderHistory();
             }
         }
-        
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (type === 'error' ? ' error' : '');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         window.onload = function() {
             updateStats();
+            updateQueueBadge();
+            updatePendingBadge();
         };
     </script>
 </body>
-</html> 
+</html>
