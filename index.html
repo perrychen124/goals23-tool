@@ -3,456 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2-3球评分工具</title>
+    <title>2-3球评分工具 v2.0 - 带反馈优化</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-            padding-bottom: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 15px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-top: 5px;
-        }
-
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-title .icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 6px;
-        }
-
-        .form-label .required {
-            color: #e74c3c;
-            margin-left: 2px;
-        }
-
-        .form-label .hint {
-            font-size: 11px;
-            color: #999;
-            font-weight: 400;
-            margin-left: 5px;
-        }
-
-        select, input[type="number"], input[type="text"] {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            background: #fafafa;
-            transition: all 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 40px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .input-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #666;
-            margin-top: 8px;
-        }
-
-        .result-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            display: none;
-        }
-
-        .result-card.show {
-            display: block;
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .score-display {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #f0f0f0;
-            margin-bottom: 15px;
-        }
-
-        .score-number {
-            font-size: 48px;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .score-grade {
-            font-size: 18px;
-            font-weight: 600;
-            margin-top: 8px;
-            padding: 6px 20px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 30px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 20px; font-weight: 700; }
+        .header p { font-size: 12px; opacity: 0.9; margin-top: 5px; }
+        .version-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+        .card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+        .card-title .icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #555; margin-bottom: 6px; }
+        .form-label .required { color: #e74c3c; margin-left: 2px; }
+        .form-label .hint { font-size: 11px; color: #999; font-weight: 400; margin-left: 5px; }
+        select, input[type="number"], input[type="text"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; background: #fafafa; transition: all 0.2s; -webkit-appearance: none; appearance: none; }
+        select:focus, input:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+        .input-row { display: flex; gap: 10px; }
+        .input-row .form-group { flex: 1; margin-bottom: 0; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+        .btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2); }
+        .btn-secondary { background: #f0f0f0; color: #666; margin-top: 8px; }
+        .btn-success { background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); color: white; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }
+        .btn-warning { background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%); color: white; }
+        .result-card { background: white; border-radius: 12px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: none; }
+        .result-card.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .score-display { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; margin-bottom: 15px; }
+        .score-number { font-size: 48px; font-weight: 800; line-height: 1; }
+        .score-grade { font-size: 18px; font-weight: 600; margin-top: 8px; padding: 6px 20px; border-radius: 20px; display: inline-block; }
         .grade-A-plus { color: #fff; background: #4CAF50; }
         .grade-A { color: #fff; background: #8BC34A; }
         .grade-B { color: #fff; background: #FFC107; }
         .grade-C { color: #fff; background: #FF9800; }
         .grade-D { color: #fff; background: #F44336; }
-
-        .prob-display {
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .prob-item {
-            text-align: center;
-        }
-
-        .prob-value {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .prob-label {
-            font-size: 12px;
-            color: #999;
-            margin-top: 4px;
-        }
-
+        .prob-display { display: flex; justify-content: space-around; padding: 15px 0; border-bottom: 2px solid #f0f0f0; }
+        .prob-item { text-align: center; }
+        .prob-value { font-size: 28px; font-weight: 700; }
+        .prob-label { font-size: 12px; color: #999; margin-top: 4px; }
         .prob-green { color: #4CAF50; }
         .prob-red { color: #F44336; }
         .prob-yellow { color: #FFC107; }
-
-        .detail-list {
-            margin-top: 15px;
-        }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-
-        .detail-item:last-child {
-            border-bottom: none;
-        }
-
-        .detail-name {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .detail-score {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .detail-bar {
-            width: 60px;
-            height: 6px;
-            background: #f0f0f0;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-left: 10px;
-        }
-
-        .detail-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-
-        .recommendation {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
+        .detail-list { margin-top: 15px; }
+        .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-name { font-size: 13px; color: #666; }
+        .detail-score { font-size: 14px; font-weight: 600; color: #333; }
+        .detail-bar { width: 60px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin-left: 10px; }
+        .detail-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+        .recommendation { margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.8; }
         .rec-green { background: #E8F5E9; color: #2E7D32; }
         .rec-yellow { background: #FFF8E1; color: #F57F17; }
         .rec-red { background: #FFEBEE; color: #C62828; }
-
-        .history-list {
-            margin-top: 10px;
-        }
-
-        .history-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-match {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .history-score {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .history-grade {
-            font-size: 11px;
-            padding: 3px 10px;
-            border-radius: 10px;
-            color: white;
-            margin-left: 8px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        .tips-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 12px;
-        }
-
-        .tips-card h3 {
-            font-size: 15px;
-            margin-bottom: 10px;
-        }
-
-        .tips-card p {
-            font-size: 12px;
-            opacity: 0.9;
-            line-height: 1.8;
-        }
-
-        .tab-bar {
-            display: flex;
-            background: white;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            background: transparent;
-            color: #666;
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .quick-ref {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .ref-item {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 12px;
-        }
-
-        .ref-label {
-            color: #999;
-            margin-bottom: 4px;
-        }
-
-        .ref-value {
-            font-weight: 600;
-            color: #333;
-        }
-
+        .feedback-section { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: 12px; padding: 18px; margin-top: 15px; border: 2px solid #2196F3; }
+        .feedback-title { font-size: 16px; font-weight: 600; color: #1565C0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .feedback-result { display: flex; gap: 10px; margin-bottom: 12px; }
+        .feedback-btn { flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .feedback-btn.selected { border-color: #2196F3; background: #E3F2FD; color: #1565C0; }
+        .feedback-btn.hit { border-color: #4CAF50; background: #E8F5E9; color: #2E7D32; }
+        .feedback-btn.miss { border-color: #F44336; background: #FFEBEE; color: #C62828; }
+        .score-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .score-input-row input { flex: 1; text-align: center; font-size: 18px; font-weight: 600; }
+        .score-separator { display: flex; align-items: center; font-size: 20px; font-weight: 700; color: #666; }
+        .stats-card { background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+        .stats-title { font-size: 16px; font-weight: 600; color: #F57F17; margin-bottom: 12px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-item { background: white; border-radius: 8px; padding: 12px; text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #333; }
+        .stat-label { font-size: 11px; color: #999; margin-top: 4px; }
+        .stat-hit { color: #4CAF50; }
+        .stat-miss { color: #F44336; }
+        .stat-rate { color: #2196F3; }
+        .history-list { margin-top: 10px; }
+        .history-item { background: #f8f9fa; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .history-match { font-size: 14px; font-weight: 500; }
+        .history-score { font-size: 16px; font-weight: 700; }
+        .history-grade { font-size: 11px; padding: 3px 10px; border-radius: 10px; color: white; margin-left: 8px; }
+        .history-result { font-size: 12px; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
+        .result-hit { background: #E8F5E9; color: #2E7D32; }
+        .result-miss { background: #FFEBEE; color: #C62828; }
+        .result-pending { background: #FFF8E1; color: #F57F17; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+        .tips-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+        .tips-card h3 { font-size: 15px; margin-bottom: 10px; }
+        .tips-card p { font-size: 12px; opacity: 0.9; line-height: 1.8; }
+        .tab-bar { display: flex; background: white; border-radius: 12px; padding: 4px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: 500; border-radius: 10px; cursor: pointer; transition: all 0.2s; border: none; background: transparent; color: #666; }
+        .tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .quick-ref { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .ref-item { background: #f8f9fa; border-radius: 8px; padding: 10px; font-size: 12px; }
+        .ref-label { color: #999; margin-bottom: 4px; }
+        .ref-value { font-weight: 600; color: #333; }
         .ref-good { color: #4CAF50; }
         .ref-bad { color: #F44336; }
-
-        @media (max-width: 400px) {
-            .header h1 { font-size: 18px; }
-            .score-number { font-size: 40px; }
-            .prob-value { font-size: 24px; }
-        }
+        .export-btn { background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%); color: white; margin-top: 10px; }
+        .clear-btn { background: #f0f0f0; color: #666; margin-top: 8px; }
+        .pending-badge { display: inline-block; background: #FFC107; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        @media (max-width: 400px) { .header h1 { font-size: 18px; } .score-number { font-size: 40px; } .prob-value { font-size: 24px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>⚽ 2-3球评分工具</h1>
         <p>基于10维度加权模型 · 科学筛选高概率比赛</p>
+        <span class="version-badge">v2.0 反馈优化版</span>
     </div>
-
+    
     <div class="container">
         <div class="tips-card">
             <h3>📋 使用说明</h3>
             <p>1. 从雷速体育APP查看比赛盘口数据<br>
-               2. 在下方的表单中填写对应数据<br>
-               3. 点击"计算评分"获取结果<br>
-               4. 评分≥0.75为推荐，≥0.85为强烈推荐</p>
+               2. 填写比赛信息和盘口数据<br>
+               3. 点击"计算评分"获取预测结果<br>
+               4. 赛后点击"记录赛果"反馈实际结果<br>
+               5. 每周截图历史记录给我优化模型</p>
         </div>
-
+        
+        <div class="stats-card" id="statsPanel" style="display:none;">
+            <div class="stats-title">📊 预测准确率统计</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value stat-rate" id="totalPredictions">0</div>
+                    <div class="stat-label">总预测数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value stat-hit" id="hitCount">0</div>
+                    <div class="stat-label">命中(2-3球)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value stat-miss" id="missCount">0</div>
+                    <div class="stat-label">未命中</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="hitRate">0%</div>
+                    <div class="stat-label">命中率</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="tab-bar">
             <button class="tab active" onclick="switchTab('calc')">📝 评分计算</button>
             <button class="tab" onclick="switchTab('history')">📊 历史记录</button>
         </div>
-
+        
         <div id="tab-calc" class="tab-content active">
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E3F2FD;">📍</span>
                     比赛基本信息
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">联赛<span class="required">*</span></label>
                     <select id="league">
@@ -468,10 +175,11 @@
                         <option value="土超">土超</option>
                         <option value="瑞典超">瑞典超</option>
                         <option value="芬超">芬超</option>
+                        <option value="韩K联">韩K联</option>
                         <option value="其他">其他</option>
                     </select>
                 </div>
-
+                
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队<span class="required">*</span></label>
@@ -483,13 +191,13 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">📈</span>
                     球队数据（近5场场均）
                 </div>
-
+                
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队进球<span class="hint">最佳1.0-2.0</span></label>
@@ -500,7 +208,7 @@
                         <input type="number" id="awayGoals" step="0.1" min="0" max="10" placeholder="1.0">
                     </div>
                 </div>
-
+                
                 <div class="input-row">
                     <div class="form-group">
                         <label class="form-label">主队失球<span class="hint">最佳1.0-1.5</span></label>
@@ -511,19 +219,19 @@
                         <input type="number" id="awayConcede" step="0.1" min="0" max="10" placeholder="1.3">
                     </div>
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">历史交锋2-3球占比<span class="hint">0-1之间，如0.6</span></label>
                     <input type="number" id="h2hRatio" step="0.1" min="0" max="1" placeholder="0.6">
                 </div>
             </div>
-
+            
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#FFF3E0;">🎯</span>
                     盘口数据
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">大小球盘口<span class="required">*</span><span class="hint">2/2.5球最佳</span></label>
                     <select id="ouLine">
@@ -537,7 +245,7 @@
                         <option value="3/3.5球">3/3.5球（不推荐）</option>
                     </select>
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">让球盘口<span class="required">*</span><span class="hint">半球最佳</span></label>
                     <select id="ahLine">
@@ -553,7 +261,7 @@
                         <option value="两球+">两球+</option>
                     </select>
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">盘口联动关系<span class="hint">让球与大小球的组合</span></label>
                     <select id="ouAhLink">
@@ -566,13 +274,13 @@
                     </select>
                 </div>
             </div>
-
+            
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#F3E5F5;">⚡</span>
                     其他因素
                 </div>
-
+                
                 <div class="form-group">
                     <label class="form-label">战意与赛程</label>
                     <select id="context">
@@ -586,16 +294,16 @@
                     </select>
                 </div>
             </div>
-
+            
             <button class="btn btn-primary" onclick="calculate()">🚀 计算评分</button>
             <button class="btn btn-secondary" onclick="resetForm()">🔄 重置表单</button>
-
+            
             <div id="result" class="result-card">
                 <div class="score-display">
                     <div class="score-number" id="scoreNum">0.00</div>
                     <div class="score-grade" id="scoreGrade">--</div>
                 </div>
-
+                
                 <div class="prob-display">
                     <div class="prob-item">
                         <div class="prob-value prob-green" id="prob23">0%</div>
@@ -610,12 +318,28 @@
                         <div class="prob-label">0-1球风险</div>
                     </div>
                 </div>
-
+                
                 <div class="detail-list" id="detailList"></div>
-
+                
                 <div class="recommendation" id="recommendation"></div>
+                
+                <div class="feedback-section" id="feedbackSection" style="display:none;">
+                    <div class="feedback-title">📝 赛后反馈</div>
+                    <div style="font-size:13px;color:#666;margin-bottom:10px;">
+                        比赛结束后，请输入实际比分并选择结果：
+                    </div>
+                    <div class="score-input-row">
+                        <input type="number" id="actualHomeGoals" placeholder="主队" min="0">
+                        <div class="score-separator">:</div>
+                        <input type="number" id="actualAwayGoals" placeholder="客队" min="0">
+                    </div>
+                    <div class="feedback-result">
+                        <button class="feedback-btn" onclick="recordResult('hit')" id="btnHit">✅ 命中(2-3球)</button>
+                        <button class="feedback-btn" onclick="recordResult('miss')" id="btnMiss">❌ 未命中</button>
+                    </div>
+                </div>
             </div>
-
+            
             <div class="card" style="margin-top:15px;">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">💡</span>
@@ -649,31 +373,32 @@
                 </div>
             </div>
         </div>
-
+        
         <div id="tab-history" class="tab-content">
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E3F2FD;">📊</span>
-                    最近评分记录
+                    预测历史记录
                 </div>
                 <div id="historyList">
                     <div class="empty-state">
                         <div class="icon">📋</div>
                         <p>暂无记录</p>
-                        <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛后，记录将显示在这里</p>
+                        <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛并记录赛果后，数据将显示在这里</p>
                     </div>
                 </div>
-                <button class="btn btn-secondary" onclick="clearHistory()" style="margin-top:10px;">🗑️ 清空记录</button>
+                <button class="btn export-btn" onclick="exportData()">📥 导出数据(CSV)</button>
+                <button class="btn clear-btn" onclick="clearHistory()">🗑️ 清空记录</button>
             </div>
         </div>
     </div>
-
-    <script>
+        <script>
         const scoringConfig = {
             leagues: {
                 "法甲": 0.95, "意甲": 0.90, "西甲": 0.80, "英超": 0.65,
                 "德甲": 0.30, "荷甲": 0.25, "葡超": 0.70, "比甲": 0.30,
-                "俄超": 0.75, "土超": 0.70, "瑞典超": 0.50, "芬超": 0.55, "其他": 0.60
+                "俄超": 0.75, "土超": 0.70, "瑞典超": 0.50, "芬超": 0.55,
+                "韩K联": 0.60, "其他": 0.60
             },
             ouLines: {
                 "1.5/2球": 0.30, "2球": 0.70, "2/2.5球": 0.98,
@@ -695,14 +420,16 @@
                 "一周双赛": 0.80, "密集赛程": 0.65
             }
         };
-
+        
+        let currentPrediction = null;
+        
         function getRangeScore(value, ranges) {
             for (let r of ranges) {
                 if (value >= r.min && value < r.max) return r.score;
             }
             return 0.5;
         }
-
+        
         function calculate() {
             const league = document.getElementById('league').value;
             const homeTeam = document.getElementById('homeTeam').value;
@@ -716,19 +443,19 @@
             const ahLine = document.getElementById('ahLine').value;
             const ouAhLink = document.getElementById('ouAhLink').value;
             const context = document.getElementById('context').value;
-
+            
             if (!league || !homeTeam || !awayTeam || !ouLine || !ahLine) {
                 alert('请填写必填项：联赛、主队、客队、大小球盘口、让球盘口');
                 return;
             }
-
+            
             const scores = {};
-
+            
             scores['联赛特征'] = {
                 score: scoringConfig.leagues[league] || 0.60,
                 weight: 0.10
             };
-
+            
             scores['主队进攻'] = {
                 score: getRangeScore(homeGoals, [
                     {min:0, max:0.5, score:0.20}, {min:0.5, max:1.0, score:0.55},
@@ -737,7 +464,7 @@
                 ]),
                 weight: 0.12
             };
-
+            
             scores['客队进攻'] = {
                 score: getRangeScore(awayGoals, [
                     {min:0, max:0.5, score:0.35}, {min:0.5, max:1.0, score:0.85},
@@ -746,7 +473,7 @@
                 ]),
                 weight: 0.10
             };
-
+            
             scores['主队防守'] = {
                 score: getRangeScore(homeConcede, [
                     {min:0, max:0.5, score:0.30}, {min:0.5, max:1.0, score:0.85},
@@ -755,7 +482,7 @@
                 ]),
                 weight: 0.08
             };
-
+            
             scores['客队防守'] = {
                 score: getRangeScore(awayConcede, [
                     {min:0, max:0.5, score:0.25}, {min:0.5, max:1.0, score:0.80},
@@ -764,7 +491,7 @@
                 ]),
                 weight: 0.08
             };
-
+            
             scores['历史交锋'] = {
                 score: getRangeScore(h2hRatio, [
                     {min:0, max:0.2, score:0.20}, {min:0.2, max:0.4, score:0.60},
@@ -773,27 +500,27 @@
                 ]),
                 weight: 0.12
             };
-
+            
             scores['大小球盘口'] = {
                 score: scoringConfig.ouLines[ouLine] || 0.90,
                 weight: 0.15
             };
-
+            
             scores['让球盘口'] = {
                 score: scoringConfig.ahLines[ahLine] || 0.95,
                 weight: 0.10
             };
-
+            
             scores['盘口联动'] = {
                 score: scoringConfig.ouAhLinks[ouAhLink] || 0.90,
                 weight: 0.08
             };
-
+            
             scores['战意赛程'] = {
                 score: scoringConfig.contexts[context] || 0.90,
                 weight: 0.07
             };
-
+            
             let totalScore = 0;
             let details = [];
             for (let [name, data] of Object.entries(scores)) {
@@ -806,9 +533,9 @@
                     weighted: weighted
                 });
             }
-
+            
             totalScore = Math.round(totalScore * 1000) / 1000;
-
+            
             let grade, gradeClass, prob23, probOver, probUnder, recText, recClass;
             if (totalScore >= 0.85) {
                 grade = 'A+ 强烈推荐';
@@ -841,7 +568,7 @@
                 recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
                 recClass = 'rec-red';
             }
-
+            
             const ouLineValue = parseFloat(ouLine.replace(/[^0-9.]/g, '')) || 2.5;
             if (ouLineValue >= 3) {
                 prob23 -= 10;
@@ -852,16 +579,37 @@
                 probOver -= 3;
                 probUnder -= 2;
             }
-
+            
+            currentPrediction = {
+                match: `${homeTeam} vs ${awayTeam}`,
+                league: league,
+                score: totalScore,
+                grade: grade,
+                gradeClass: gradeClass,
+                prob23: prob23,
+                probOver: probOver,
+                probUnder: probUnder,
+                recommendation: recText,
+                details: details,
+                inputs: {
+                    homeGoals, awayGoals, homeConcede, awayConcede,
+                    h2hRatio, ouLine, ahLine, ouAhLink, context
+                },
+                time: new Date().toLocaleString('zh-CN'),
+                result: null,
+                actualScore: null,
+                isHit: null
+            };
+            
             document.getElementById('scoreNum').textContent = totalScore.toFixed(3);
             const gradeEl = document.getElementById('scoreGrade');
             gradeEl.textContent = grade;
             gradeEl.className = 'score-grade ' + gradeClass;
-
+            
             document.getElementById('prob23').textContent = prob23 + '%';
             document.getElementById('probOver').textContent = probOver + '%';
             document.getElementById('probUnder').textContent = probUnder + '%';
-
+            
             const detailList = document.getElementById('detailList');
             detailList.innerHTML = details.map(d => {
                 const barColor = d.raw >= 0.8 ? '#4CAF50' : d.raw >= 0.6 ? '#FFC107' : '#F44336';
@@ -875,28 +623,166 @@
                     </div>
                 </div>`;
             }).join('');
-
+            
             const recEl = document.getElementById('recommendation');
             recEl.className = 'recommendation ' + recClass;
             recEl.innerHTML = `<strong>投注建议：</strong><br>${recText}`;
-
+            
+            document.getElementById('feedbackSection').style.display = 'block';
+            
             document.getElementById('result').classList.add('show');
-
-            saveHistory({
-                match: `${homeTeam} vs ${awayTeam}`,
-                league: league,
-                score: totalScore,
-                grade: grade,
-                gradeClass: gradeClass,
-                prob23: prob23,
-                time: new Date().toLocaleString('zh-CN')
-            });
-
+            
             setTimeout(() => {
                 document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
             }, 100);
         }
-
+                   function recordResult(result) {
+            if (!currentPrediction) {
+                alert('请先进行预测评分');
+                return;
+            }
+            
+            const homeGoals = parseInt(document.getElementById('actualHomeGoals').value);
+            const awayGoals = parseInt(document.getElementById('actualAwayGoals').value);
+            
+            if (isNaN(homeGoals) || isNaN(awayGoals)) {
+                alert('请输入完整的实际比分');
+                return;
+            }
+            
+            const totalGoals = homeGoals + awayGoals;
+            const is23 = totalGoals === 2 || totalGoals === 3;
+            
+            currentPrediction.actualScore = `${homeGoals}:${awayGoals}`;
+            currentPrediction.totalGoals = totalGoals;
+            currentPrediction.isHit = result === 'hit' && is23;
+            currentPrediction.result = result;
+            
+            saveHistory(currentPrediction);
+            
+            document.querySelectorAll('.feedback-btn').forEach(btn => btn.classList.remove('selected', 'hit', 'miss'));
+            if (result === 'hit') {
+                document.getElementById('btnHit').classList.add('selected', 'hit');
+            } else {
+                document.getElementById('btnMiss').classList.add('selected', 'miss');
+            }
+            
+            alert(`已记录赛果！\n比赛：${currentPrediction.match}\n预测：${currentPrediction.grade}\n实际比分：${homeGoals}:${awayGoals} (总进球${totalGoals})\n结果：${currentPrediction.isHit ? '✅ 命中' : '❌ 未命中'}`);
+            
+            updateStats();
+            currentPrediction = null;
+        }
+        
+        function saveHistory(record) {
+            let history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            history.unshift(record);
+            if (history.length > 100) history = history.slice(0, 100);
+            localStorage.setItem('goals23_history_v2', JSON.stringify(history));
+            updateStats();
+        }
+        
+        function updateStats() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            const completed = history.filter(h => h.result !== null);
+            const hits = completed.filter(h => h.isHit).length;
+            const misses = completed.filter(h => !h.isHit).length;
+            const total = completed.length;
+            const rate = total > 0 ? Math.round((hits / total) * 100) : 0;
+            
+            document.getElementById('totalPredictions').textContent = total;
+            document.getElementById('hitCount').textContent = hits;
+            document.getElementById('missCount').textContent = misses;
+            document.getElementById('hitRate').textContent = rate + '%';
+            
+            if (total > 0) {
+                document.getElementById('statsPanel').style.display = 'block';
+            }
+        }
+        
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            const listEl = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                listEl.innerHTML = `<div class="empty-state">
+                    <div class="icon">📋</div>
+                    <p>暂无记录</p>
+                    <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛并记录赛果后，数据将显示在这里</p>
+                </div>`;
+                return;
+            }
+            
+            listEl.innerHTML = history.map((h, idx) => {
+                const gradeClassMap = {
+                    'A+ 强烈推荐': 'grade-A-plus',
+                    'A 推荐': 'grade-A',
+                    'B 可考虑': 'grade-B',
+                    'C 谨慎': 'grade-C',
+                    'D 不推荐': 'grade-D'
+                };
+                
+                let resultHtml = '';
+                if (h.result === null) {
+                    resultHtml = `<span class="history-result result-pending">待反馈</span>`;
+                } else if (h.isHit) {
+                    resultHtml = `<span class="history-result result-hit">✅ 命中 ${h.actualScore}</span>`;
+                } else {
+                    resultHtml = `<span class="history-result result-miss">❌ 未中 ${h.actualScore}</span>`;
+                }
+                
+                return `<div class="history-item">
+                    <div>
+                        <div class="history-match">${h.match}</div>
+                        <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <span class="history-score">${h.score.toFixed(3)}</span>
+                        <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${h.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D')}</span>
+                        ${resultHtml}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        function exportData() {
+            const history = JSON.parse(localStorage.getItem('goals23_history_v2') || '[]');
+            if (history.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+            
+            let csv = '\uFEFF';
+            csv += '日期,联赛,比赛,预测评分,推荐等级,2-3球概率,实际比分,总进球,是否命中\n';
+            
+            history.forEach(h => {
+                const hit = h.result === null ? '待反馈' : (h.isHit ? '命中' : '未命中');
+                const score = h.actualScore || '-';
+                const total = h.totalGoals || '-';
+                csv += `${h.time},${h.league},${h.match},${h.score.toFixed(3)},${h.grade},${h.prob23}%,${score},${total},${hit}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `goals23_data_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('数据已导出！\n文件名：goals23_data_日期.csv\n\n请将CSV文件发送给我，我会分析数据并优化模型。');
+        }
+        
+        function clearHistory() {
+            if (confirm('确定清空所有历史记录吗？此操作不可恢复！')) {
+                localStorage.removeItem('goals23_history_v2');
+                updateStats();
+                renderHistory();
+                alert('历史记录已清空');
+            }
+        }
+        
         function resetForm() {
             document.querySelectorAll('input, select').forEach(el => {
                 if (el.tagName === 'SELECT') {
@@ -906,12 +792,14 @@
                 }
             });
             document.getElementById('result').classList.remove('show');
+            document.getElementById('feedbackSection').style.display = 'none';
+            currentPrediction = null;
         }
-
+        
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-
+            
             if (tab === 'calc') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('tab-calc').classList.add('active');
@@ -921,54 +809,10 @@
                 renderHistory();
             }
         }
-
-        function saveHistory(record) {
-            let history = JSON.parse(localStorage.getItem('goals23_history') || '[]');
-            history.unshift(record);
-            if (history.length > 50) history = history.slice(0, 50);
-            localStorage.setItem('goals23_history', JSON.stringify(history));
-        }
-
-        function renderHistory() {
-            const history = JSON.parse(localStorage.getItem('goals23_history') || '[]');
-            const listEl = document.getElementById('historyList');
-
-            if (history.length === 0) {
-                listEl.innerHTML = `<div class="empty-state">
-                    <div class="icon">📋</div>
-                    <p>暂无记录</p>
-                    <p style="font-size:12px; margin-top:5px;">在"评分计算"页面分析比赛后，记录将显示在这里</p>
-                </div>`;
-                return;
-            }
-
-            listEl.innerHTML = history.map(h => {
-                const gradeClassMap = {
-                    'A+ 强烈推荐': 'grade-A-plus',
-                    'A 推荐': 'grade-A',
-                    'B 可考虑': 'grade-B',
-                    'C 谨慎': 'grade-C',
-                    'D 不推荐': 'grade-D'
-                };
-                return `<div class="history-item">
-                    <div>
-                        <div class="history-match">${h.match}</div>
-                        <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                        <span class="history-score">${h.score.toFixed(3)}</span>
-                        <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${h.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D')}</span>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function clearHistory() {
-            if (confirm('确定清空所有历史记录吗？')) {
-                localStorage.removeItem('goals23_history');
-                renderHistory();
-            }
-        }
+        
+        window.onload = function() {
+            updateStats();
+        };
     </script>
 </body>
-</html>
+</html> 
