@@ -678,13 +678,13 @@
                 recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
                 recClass = 'rec-red';
             }
-
-            const ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
-            if (ouLineValue >= 3) {
-                prob23 -= 10;
-                probOver += 8;
-                probUnder += 2;
-            } else if (ouLineValue <= 2.25) {
+            let ouLineValue = 2.5;
+            if (inputs.ouLine.includes('/')) {
+                const parts = inputs.ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
+                ouLineValue = parts.length === 2 ? (parts[0] + parts[1]) / 2 : (parts[0] || 2.5);
+            } else {
+                ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
+            }
                 prob23 += 5;
                 probOver -= 3;
                 probUnder -= 2;
