@@ -289,7 +289,7 @@
 
                 <div class="form-group">
                     <label class="form-label">大小球盘口<span class="required">*</span><span class="hint">2/2.5球最佳</span></label>
-                    <select id="ouLine">
+                    <select id="ouLine" onchange="autoRecommendOuAhLink()">
                         <option value="">请选择</option>
                         <option value="1.5/2球">1.5/2球</option>
                         <option value="2球">2球</option>
@@ -303,7 +303,7 @@
 
                 <div class="form-group">
                     <label class="form-label">让球盘口<span class="required">*</span><span class="hint">半球最佳</span></label>
-                    <select id="ahLine">
+                    <select id="ahLine" onchange="autoRecommendOuAhLink()">
                         <option value="">请选择</option>
                         <option value="平手">平手</option>
                         <option value="平手/半球">平手/半球</option>
@@ -1251,7 +1251,73 @@
                 }
             }
         }
-
+                function autoRecommendOuAhLink() {
+            const ahLine = document.getElementById('ahLine').value;
+            const ouLine = document.getElementById('ouLine').value;
+            const ouAhLink = document.getElementById('ouAhLink');
+            
+            if (!ahLine || !ouLine) return;
+            
+            // Parse ouLine value
+            let ouValue = 2.5;
+            if (ouLine.includes('/')) {
+                const parts = ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
+                ouValue = parts.length === 2 ? (parts[0] + parts[1]) / 2 : (parts[0] || 2.5);
+            } else {
+                ouValue = parseFloat(ouLine.replace(/[^0-9.]/g, '')) || 2.5;
+            }
+            
+            // Determine depth of ahLine
+            const deepLines = ['一球', '一球/球半', '球半', '球半/两球', '两球+'];
+            const shallowLines = ['平手', '平手/半球'];
+            const midLines = ['半球', '半球/一球'];
+            
+            const isDeep = deepLines.includes(ahLine);
+            const isShallow = shallowLines.includes(ahLine);
+            const isMid = midLines.includes(ahLine);
+            const isSmallBall = ouValue <= 2.5;
+            const isBigBall = ouValue > 2.5;
+            
+            let recommend = '中让+标准球盘';
+            let reason = '默认匹配';
+            
+            if (isDeep && isSmallBall) {
+                recommend = '深让+小球盘';
+                reason = '深让球+小球盘，强队控场，2-3球概率高';
+            } else if (isDeep && isBigBall) {
+                recommend = '深让+大球盘';
+                reason = '深让球+大球盘，强队猛攻，注意4+球风险';
+            } else if (isShallow && isSmallBall) {
+                recommend = '浅让+小球盘';
+                reason = '浅让球+小球盘，双方保守，可能0-1球';
+            } else if (isShallow && isBigBall) {
+                recommend = '浅让+大球盘';
+                reason = '浅让球+大球盘，对攻局，进球不可控';
+            } else if (isMid && isBigBall) {
+                recommend = '中让+大球盘';
+                reason = '中等让球+大球盘，偏离风险较高';
+            } else if (isMid && isSmallBall) {
+                recommend = '中让+标准球盘';
+                reason = '中等让球+标准球盘，标准配置';
+            }
+            
+            // Only auto-select if current value is the default
+            if (ouAhLink.value === '中让+标准球盘') {
+                ouAhLink.value = recommend;
+            }
+            
+            // Show hint
+            const label = document.querySelector('label[for=\"ouAhLink\"]') || document.querySelector('#ouAhLink').closest('.form-group').querySelector('.form-label');
+            let hint = label.querySelector('.auto-hint');
+            if (!hint) {
+                hint = document.createElement('span');
+                hint.className = 'auto-hint';
+                hint.style.cssText = 'font-size:11px;color:#4CAF50;margin-left:8px;font-weight:500;';
+                label.appendChild(hint);
+            }
+            hint.textContent = '推荐: ' + reason;
+        }
+        
         window.onload = function() {
             migrateData();
             updateStats();
