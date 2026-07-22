@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2-3球评分工具 v3.1</title>
+    <title>2-3球评分工具 v3.1 - 批量预测版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 30px; }
@@ -250,7 +250,7 @@
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">📈</span>
-                    球队数据（近10场场均）
+                    球队数据（近5场场均）
                 </div>
 
                 <div class="input-row">
@@ -678,6 +678,7 @@
                 recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
                 recClass = 'rec-red';
             }
+
             let ouLineValue = 2.5;
             if (inputs.ouLine.includes('/')) {
                 const parts = inputs.ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
@@ -685,6 +686,11 @@
             } else {
                 ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
             }
+            if (ouLineValue >= 3) {
+                prob23 -= 10;
+                probOver += 8;
+                probUnder += 2;
+            } else if (ouLineValue <= 2.25) {
                 prob23 += 5;
                 probOver -= 3;
                 probUnder -= 2;
@@ -830,7 +836,7 @@
                 const gradeShort = item.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D');
                 return `<div class="queue-item">
                     <div class="queue-item-info">
-                        <div class="queue-item-match">${item.match}</div>
+                        <div class="queue-item-meta">${item.league} · ${item.grade} · 2-3球${item.prob23}% · ${item.time}</div>
                         <div class="queue-item-meta">${item.league} · ${item.grade} · ${item.time}</div>
                     </div>
                     <div style="display:flex;align-items:center;">
@@ -1115,7 +1121,7 @@
                             <span class="pending-card-match">${h.match}</span>
                             <span class="pending-card-grade ${gradeClassMap[h.grade] || 'grade-B'}">${gradeShort}</span>
                         </div>
-                        <div class="pending-card-meta">${h.league} · 预测评分 ${h.score.toFixed(3)} · ${h.time}</div>
+                        <div class="pending-card-meta">${h.league} · 预测评分 ${h.score.toFixed(3)} · 2-3球${h.prob23}% · ${h.time}</div>
                         <div class="score-input-row" style="margin-bottom:10px;">
                             <input type="number" id="actualHome_${h.id}" placeholder="主队" min="0" style="flex:1;text-align:center;font-size:16px;font-weight:600;">
                             <div class="score-separator">:</div>
@@ -1140,7 +1146,7 @@
                     <div class="history-item-header">
                         <div>
                             <div class="history-match">${h.match}</div>
-                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · 2-3球${h.prob23}% · ${h.time}</div>
                         </div>
                         <div style="display:flex;align-items:center;">
                             <span class="history-score">${h.score.toFixed(3)}</span>
