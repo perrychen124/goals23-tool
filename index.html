@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2-3球评分工具 v3.0 - 批量预测版</title>
+    <title>2-3球评分工具 v3.1</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 30px; }
@@ -32,6 +32,7 @@
         .btn-warning { background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%); color: white; }
         .btn-info { background: linear-gradient(135deg, #2196F3 0%, #03A9F4 100%); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
         .btn-danger { background: linear-gradient(135deg, #F44336 0%, #E57373 100%); color: white; }
+        .btn-small { padding: 8px 12px; font-size: 12px; margin-top: 0; width: auto; }
         .result-card { background: white; border-radius: 12px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: none; }
         .result-card.show { display: block; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -71,7 +72,8 @@
         .stat-miss { color: #F44336; }
         .stat-rate { color: #2196F3; }
         .history-list { margin-top: 10px; }
-        .history-item { background: #f8f9fa; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .history-item { background: #f8f9fa; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; }
+        .history-item-header { display: flex; justify-content: space-between; align-items: center; }
         .history-match { font-size: 14px; font-weight: 500; }
         .history-score { font-size: 16px; font-weight: 700; }
         .history-grade { font-size: 11px; padding: 3px 10px; border-radius: 10px; color: white; margin-left: 8px; }
@@ -108,7 +110,10 @@
         .queue-item-match { font-size: 14px; font-weight: 600; color: #333; }
         .queue-item-meta { font-size: 11px; color: #999; margin-top: 3px; }
         .queue-item-score { font-size: 20px; font-weight: 700; color: #667eea; margin-right: 10px; }
-        .queue-item-delete { background: #FFEBEE; color: #F44336; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+        .queue-item-actions { display: flex; gap: 6px; }
+        .queue-item-btn { background: #f0f0f0; color: #666; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+        .queue-item-btn:active { background: #667eea; color: white; }
+        .queue-item-delete { background: #FFEBEE; color: #F44336; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
         .queue-item-delete:active { background: #F44336; color: white; }
         .queue-empty { text-align: center; padding: 30px; color: #999; font-size: 14px; }
 
@@ -138,6 +143,18 @@
         .pending-card-actions { display: flex; gap: 8px; }
         .pending-card-actions .btn { margin-top: 0; padding: 10px; font-size: 14px; }
 
+        /* 已反馈记录操作按钮 */
+        .history-actions { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; }
+        .history-actions .btn-small { margin-top: 0; }
+
+        /* 编辑模态框 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+        .modal-footer { display: flex; gap: 10px; margin-top: 16px; }
+        .modal-footer .btn { margin-top: 0; flex: 1; }
+
         @media (max-width: 400px) { 
             .header h1 { font-size: 18px; } 
             .score-number { font-size: 40px; } 
@@ -151,7 +168,7 @@
     <div class="header">
         <h1>⚽ 2-3球评分工具</h1>
         <p>基于10维度加权模型 · 批量预测 · 赛后反馈</p>
-        <span class="version-badge">v3.0 批量预测版</span>
+        <span class="version-badge">v3.1 批量预测版</span>
     </div>
 
     <div class="container">
@@ -233,7 +250,7 @@
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">📈</span>
-                    球队数据（近5场场均）
+                    球队数据（近10场场均）
                 </div>
 
                 <div class="input-row">
@@ -445,8 +462,19 @@
         </div>
     </div>
 
-    <script>
+    <!-- 编辑模态框 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">✏️ 编辑比赛</div>
+            <div id="editModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveEditModal()">保存修改</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
         const scoringConfig = {
             leagues: {
                 "法甲": 0.95, "意甲": 0.90, "西甲": 0.80, "英超": 0.65,
@@ -479,6 +507,8 @@
         let predictionQueue = [];
         let currentPreview = null;
         let currentFilter = 'all';
+        let editingQueueIndex = -1;
+        let editingHistoryId = null;
 
         function getRangeScore(value, ranges) {
             for (let r of ranges) {
@@ -502,6 +532,21 @@
                 ouAhLink: document.getElementById('ouAhLink').value,
                 context: document.getElementById('context').value
             };
+        }
+
+        function setInputs(inputs) {
+            document.getElementById('league').value = inputs.league || '';
+            document.getElementById('homeTeam').value = inputs.homeTeam || '';
+            document.getElementById('awayTeam').value = inputs.awayTeam || '';
+            document.getElementById('homeGoals').value = inputs.homeGoals || '';
+            document.getElementById('awayGoals').value = inputs.awayGoals || '';
+            document.getElementById('homeConcede').value = inputs.homeConcede || '';
+            document.getElementById('awayConcede').value = inputs.awayConcede || '';
+            document.getElementById('h2hRatio').value = inputs.h2hRatio || '';
+            document.getElementById('ouLine').value = inputs.ouLine || '';
+            document.getElementById('ahLine').value = inputs.ahLine || '';
+            document.getElementById('ouAhLink').value = inputs.ouAhLink || '中让+标准球盘';
+            document.getElementById('context').value = inputs.context || '常规联赛';
         }
 
         function validateInputs(inputs) {
@@ -736,6 +781,16 @@
                 return;
             }
 
+            // 如果是编辑模式，更新队列中的比赛
+            if (editingQueueIndex >= 0 && editingQueueIndex < predictionQueue.length) {
+                const calcResult = calculateScore(inputs);
+                predictionQueue[editingQueueIndex] = buildPrediction(inputs, calcResult);
+                editingQueueIndex = -1;
+                updateQueueDisplay();
+                alert('✅ 比赛参数已更新！');
+                return;
+            }
+
             const calcResult = calculateScore(inputs);
             const prediction = buildPrediction(inputs, calcResult);
 
@@ -745,9 +800,7 @@
             // 重置表单
             resetForm(false);
 
-            alert(`✅ 已添加「${prediction.match}」到预测队列！
-评分：${prediction.score.toFixed(3)} ${prediction.grade}
-当前队列共 ${predictionQueue.length} 场比赛`);
+            alert(`✅ 已添加「${prediction.match}」到预测队列！\n评分：${prediction.score.toFixed(3)} ${prediction.grade}\n当前队列共 ${predictionQueue.length} 场比赛`);
         }
 
         function updateQueueDisplay() {
@@ -783,10 +836,29 @@
                     <div style="display:flex;align-items:center;">
                         <span class="queue-item-score">${item.score.toFixed(3)}</span>
                         <span class="history-grade ${gradeClassMap[item.grade] || 'grade-B'}" style="margin-right:8px;">${gradeShort}</span>
-                        <button class="queue-item-delete" onclick="removeFromQueue(${idx})">删除</button>
+                        <div class="queue-item-actions">
+                            <button class="queue-item-btn" onclick="editQueueItem(${idx})">✏️</button>
+                            <button class="queue-item-delete" onclick="removeFromQueue(${idx})">🗑️</button>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        function editQueueItem(index) {
+            if (index < 0 || index >= predictionQueue.length) return;
+
+            const item = predictionQueue[index];
+            setInputs(item.inputs);
+            editingQueueIndex = index;
+
+            // 切换到添加预测页面
+            switchTab('calc');
+
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            alert(`✏️ 正在编辑「${item.match}」\n修改参数后点击"添加到预测列表"即可更新`);
         }
 
         function removeFromQueue(index) {
@@ -827,9 +899,7 @@
             updateQueueDisplay();
             updateStats();
 
-            alert(`✅ 已成功保存 ${count} 场比赛到历史记录！
-
-赛后请打开"历史记录" → "待反馈"标签，逐条输入实际比分。`);
+            alert(`✅ 已成功保存 ${count} 场比赛到历史记录！\n\n赛后请打开"历史记录" → "待反馈"标签，逐条输入实际比分。`);
 
             // 自动切换到历史记录页面
             switchTab('history');
@@ -866,11 +936,113 @@
             updateStats();
             renderHistory();
 
-            alert(`已记录赛果！
-比赛：${history[idx].match}
-预测：${history[idx].grade}
-实际比分：${homeGoals}:${awayGoals} (总进球${totalGoals})
-结果：${history[idx].isHit ? '✅ 命中' : '❌ 未命中'}`);
+            alert(`已记录赛果！\n比赛：${history[idx].match}\n预测：${history[idx].grade}\n实际比分：${homeGoals}:${awayGoals} (总进球${totalGoals})\n结果：${history[idx].isHit ? '✅ 命中' : '❌ 未命中'}`);
+        }
+
+        function deleteHistoryItem(id) {
+            if (!confirm('确定删除这条历史记录吗？此操作不可恢复！')) return;
+
+            let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            history = history.filter(h => h.id !== id);
+            localStorage.setItem('goals23_history_v3', JSON.stringify(history));
+
+            updateStats();
+            renderHistory();
+            alert('✅ 记录已删除');
+        }
+
+        function openEditHistoryModal(id) {
+            let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            const item = history.find(h => h.id === id);
+            if (!item) return;
+
+            editingHistoryId = id;
+
+            const modalBody = document.getElementById('editModalBody');
+            modalBody.innerHTML = `
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">${item.match}</div>
+                    <div style="font-size:12px;color:#999;">${item.league} · 预测评分 ${item.score.toFixed(3)} · ${item.grade}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">实际比分</label>
+                    <div class="score-input-row">
+                        <input type="number" id="editHome_${id}" value="${item.actualScore ? item.actualScore.split(':')[0] : ''}" placeholder="主队" min="0" style="flex:1;text-align:center;font-size:16px;font-weight:600;">
+                        <div class="score-separator">:</div>
+                        <input type="number" id="editAway_${id}" value="${item.actualScore ? item.actualScore.split(':')[1] : ''}" placeholder="客队" min="0" style="flex:1;text-align:center;font-size:16px;font-weight:600;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">结果判定</label>
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="feedback-btn ${item.result === 'hit' && item.isHit ? 'hit' : ''}" onclick="selectEditResult('hit')" id="editResultHit" style="flex:1;">✅ 命中(2-3球)</button>
+                        <button type="button" class="feedback-btn ${item.result === 'miss' || (item.result === 'hit' && !item.isHit) ? 'miss' : ''}" onclick="selectEditResult('miss')" id="editResultMiss" style="flex:1;">❌ 未命中</button>
+                    </div>
+                </div>
+            `;
+
+            // Store current edit result
+            window._editResult = item.result;
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function selectEditResult(result) {
+            window._editResult = result;
+            document.getElementById('editResultHit').classList.remove('hit');
+            document.getElementById('editResultMiss').classList.remove('miss');
+            if (result === 'hit') {
+                document.getElementById('editResultHit').classList.add('hit');
+            } else {
+                document.getElementById('editResultMiss').classList.add('miss');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            editingHistoryId = null;
+            window._editResult = null;
+        }
+
+        function saveEditModal() {
+            if (!editingHistoryId) return;
+
+            let history = JSON.parse(localStorage.getItem('goals23_history_v3') || '[]');
+            const idx = history.findIndex(h => h.id === editingHistoryId);
+            if (idx === -1) return;
+
+            const homeGoalsInput = document.getElementById('editHome_' + editingHistoryId);
+            const awayGoalsInput = document.getElementById('editAway_' + editingHistoryId);
+
+            if (!homeGoalsInput || !awayGoalsInput) {
+                closeEditModal();
+                return;
+            }
+
+            const homeGoals = parseInt(homeGoalsInput.value);
+            const awayGoals = parseInt(awayGoalsInput.value);
+
+            if (isNaN(homeGoals) || isNaN(awayGoals)) {
+                alert('请输入完整的实际比分');
+                return;
+            }
+
+            const totalGoals = homeGoals + awayGoals;
+            const is23 = totalGoals === 2 || totalGoals === 3;
+            const result = window._editResult || 'miss';
+
+            history[idx].actualScore = homeGoals + ':' + awayGoals;
+            history[idx].totalGoals = totalGoals;
+            history[idx].isHit = result === 'hit' && is23;
+            history[idx].result = result;
+
+            localStorage.setItem('goals23_history_v3', JSON.stringify(history));
+
+            closeEditModal();
+            updateStats();
+            renderHistory();
+
+            alert(`✅ 赛果已更新！\n比赛：${history[idx].match}\n实际比分：${homeGoals}:${awayGoals} (总进球${totalGoals})\n结果：${history[idx].isHit ? '✅ 命中' : '❌ 未命中'}`);
         }
 
         function updateStats() {
@@ -956,7 +1128,7 @@
                     </div>`;
                 }
 
-                // 已反馈的比赛显示结果
+                // 已反馈的比赛显示结果 + 操作按钮
                 let resultHtml = '';
                 if (h.isHit) {
                     resultHtml = `<span class="history-result result-hit">✅ 命中 ${h.actualScore}</span>`;
@@ -965,14 +1137,20 @@
                 }
 
                 return `<div class="history-item">
-                    <div>
-                        <div class="history-match">${h.match}</div>
-                        <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+                    <div class="history-item-header">
+                        <div>
+                            <div class="history-match">${h.match}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · ${h.time}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <span class="history-score">${h.score.toFixed(3)}</span>
+                            <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${gradeShort}</span>
+                            ${resultHtml}
+                        </div>
                     </div>
-                    <div style="display:flex;align-items:center;">
-                        <span class="history-score">${h.score.toFixed(3)}</span>
-                        <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${gradeShort}</span>
-                        ${resultHtml}
+                    <div class="history-actions">
+                        <button class="btn btn-info btn-small" onclick="openEditHistoryModal('${h.id}')">✏️ 编辑比分</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteHistoryItem('${h.id}')">🗑️ 删除</button>
                     </div>
                 </div>`;
             }).join('');
@@ -1029,6 +1207,7 @@
                 document.getElementById('result').classList.remove('show');
                 currentPreview = null;
             }
+            editingQueueIndex = -1;
         }
 
         function switchTab(tab) {
