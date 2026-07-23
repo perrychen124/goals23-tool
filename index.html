@@ -19,7 +19,7 @@
         .form-label { display: block; font-size: 14px; font-weight: 500; color: #555; margin-bottom: 6px; }
         .form-label .required { color: #e74c3c; margin-left: 2px; }
         .form-label .hint { font-size: 11px; color: #999; font-weight: 400; margin-left: 5px; }
-        select, input[type="number"], input[type="text"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; background: #fafafa; transition: all 0.2s; -webkit-appearance: none; appearance: none; }
+        select, input[type="number"], input[type="text"], input[type="date"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; background: #fafafa; transition: all 0.2s; -webkit-appearance: none; appearance: none; }
         select:focus, input:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
         select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
         .input-row { display: flex; gap: 10px; }
@@ -249,6 +249,17 @@
                         <option value="荷甲">荷甲（不推荐）</option>
                         <option value="其他">其他</option>
                     </select>
+                    <!-- 自定义联赛输入框（默认隐藏） -->
+                    <div id="customLeagueGroup" style="display:none; margin-top:8px;">
+                        <label class="form-label">自定义联赛名称<span class="required">*</span></label>
+                        <input type="text" id="customLeague" placeholder="如：巴西乙、沙特联等">
+                    </div>
+                </div>
+
+                <!-- ===== 新增：比赛日期选择器 ===== -->
+                <div class="form-group">
+                    <label class="form-label">比赛日期<span class="hint">选择比赛实际日期</span></label>
+                    <input type="date" id="matchDate">
                 </div>
 
                 <div class="input-row">
@@ -500,7 +511,7 @@
                 "俄超": 0.75, "土超": 0.70, "葡超": 0.70,
                 // ===== 中等联赛（有一定大球风险，但可接受） =====
                 "英超": 0.65, "中超": 0.65, "捷甲": 0.60, "丹超": 0.60,
-                "韩K联": 0.60, "瑞典超": 0.50, "芬超": 0.55, "比甲": 0.45,   // 比甲从0.30修正为0.45
+                "韩K联": 0.60, "瑞典超": 0.50, "芬超": 0.55, "比甲": 0.45,
                 // ===== 风险较高（大球频发，谨慎对待） =====
                 "美职联": 0.55, "中甲": 0.50, "瑞士超": 0.45, "挪超": 0.40,
                 // ===== 坚决避开（极易出4+球） =====
@@ -544,8 +555,17 @@
         }
 
         function getInputs() {
+            // 处理自定义联赛
+            let leagueVal = document.getElementById('league').value;
+            if (leagueVal === '其他') {
+                const custom = document.getElementById('customLeague').value.trim();
+                if (custom) {
+                    leagueVal = custom;
+                }
+            }
+
             return {
-                league: document.getElementById('league').value,
+                league: leagueVal,
                 homeTeam: document.getElementById('homeTeam').value.trim(),
                 awayTeam: document.getElementById('awayTeam').value.trim(),
                 homeGoals: parseFloat(document.getElementById('homeGoals').value) || 1.5,
@@ -556,12 +576,32 @@
                 ouLine: document.getElementById('ouLine').value,
                 ahLine: document.getElementById('ahLine').value,
                 ouAhLink: document.getElementById('ouAhLink').value,
-                context: document.getElementById('context').value
+                context: document.getElementById('context').value,
+                matchDate: document.getElementById('matchDate').value
             };
         }
 
         function setInputs(inputs) {
-            document.getElementById('league').value = inputs.league || '';
+            // 先设置联赛下拉框
+            const leagueSelect = document.getElementById('league');
+            leagueSelect.value = inputs.league || '';
+
+            // 检查这个联赛是否在预设列表中
+            const isPreset = Array.from(leagueSelect.options).some(opt => opt.value === inputs.league);
+            const customGroup = document.getElementById('customLeagueGroup');
+            const customInput = document.getElementById('customLeague');
+
+            if (!isPreset && inputs.league) {
+                // 如果不是预设联赛，视为自定义
+                leagueSelect.value = '其他';
+                customGroup.style.display = 'block';
+                customInput.value = inputs.league;
+            } else {
+                customGroup.style.display = 'none';
+                customInput.value = '';
+            }
+
+            // 其余字段保持不变
             document.getElementById('homeTeam').value = inputs.homeTeam || '';
             document.getElementById('awayTeam').value = inputs.awayTeam || '';
             document.getElementById('homeGoals').value = inputs.homeGoals || '';
@@ -573,6 +613,7 @@
             document.getElementById('ahLine').value = inputs.ahLine || '';
             document.getElementById('ouAhLink').value = inputs.ouAhLink || '中让+标准球盘';
             document.getElementById('context').value = inputs.context || '常规联赛';
+            document.getElementById('matchDate').value = inputs.matchDate || '';
         }
 
         function validateInputs(inputs) {
@@ -616,7 +657,7 @@
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.80},
                     {min:2.0, max:10, score:0.35}
                 ]),
-                weight: 0.06   // 从0.08降至0.06，平衡总权重
+                weight: 0.06
             };
 
             scores['客队防守'] = {
@@ -625,7 +666,7 @@
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.85},
                     {min:2.0, max:10, score:0.40}
                 ]),
-                weight: 0.06   // 从0.08降至0.06，平衡总权重
+                weight: 0.06
             };
 
             scores['历史交锋'] = {
@@ -639,7 +680,7 @@
 
             scores['大小球盘口'] = {
                 score: scoringConfig.ouLines[inputs.ouLine] || 0.90,
-                weight: 0.20   // 从15%提升至20%，强化盘口决策力
+                weight: 0.20
             };
 
             scores['让球盘口'] = {
@@ -654,7 +695,7 @@
 
             scores['战意赛程'] = {
                 score: scoringConfig.contexts[inputs.context] || 0.90,
-                weight: 0.06   // 从0.07降至0.06，平衡总权重
+                weight: 0.06
             };
 
             let totalScore = 0;
@@ -696,7 +737,7 @@
                 recClass = 'rec-red';
             }
 
-            // ===== 步骤2：大小球盘口二次修正（保留此逻辑，让概率产生55%和60%的区别） =====
+            // ===== 步骤2：大小球盘口二次修正 =====
             let ouLineValue = 2.5;
             if (inputs.ouLine.includes('/')) {
                 const parts = inputs.ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
@@ -714,7 +755,7 @@
                 probUnder -= 2;
             }
 
-            // ===== 步骤3：根据最终修正后的概率，显示对应的等级（55%显示A+，60%显示A++） =====
+            // ===== 步骤3：根据最终修正后的概率显示等级 =====
             if (prob23 >= 60) {
                 grade = 'A++';
                 gradeClass = 'grade-A-plus';
@@ -736,8 +777,6 @@
                 grade = 'D';
                 gradeClass = 'grade-D';
             }
-            
-            // (已删除盘口二次修正逻辑，避免概率倒挂，仅靠15%->20%权重调节)
 
             return {
                 score: totalScore,
@@ -767,6 +806,7 @@
                 details: calcResult.details,
                 inputs: inputs,
                 time: new Date().toLocaleString('zh-CN'),
+                matchDate: inputs.matchDate || '',
                 result: null,
                 actualScore: null,
                 totalGoals: null,
@@ -830,7 +870,6 @@
                 return;
             }
 
-            // 如果是编辑模式，更新队列中的比赛
             if (editingQueueIndex >= 0 && editingQueueIndex < predictionQueue.length) {
                 const calcResult = calculateScore(inputs);
                 predictionQueue[editingQueueIndex] = buildPrediction(inputs, calcResult);
@@ -846,7 +885,6 @@
             predictionQueue.push(prediction);
             updateQueueDisplay();
 
-            // 重置表单
             resetForm(false);
 
             alert(`✅ 已添加「${prediction.match}」到预测队列！\n评分：${prediction.score.toFixed(3)} ${prediction.grade}\n当前队列共 ${predictionQueue.length} 场比赛`);
@@ -867,20 +905,12 @@
                 return;
             }
 
-            const gradeClassMap = {
-                'A+ 强烈推荐': 'grade-A-plus',
-                'A 推荐': 'grade-A',
-                'B 可考虑': 'grade-B',
-                'C 谨慎': 'grade-C',
-                'D 不推荐': 'grade-D'
-            };
-
             listEl.innerHTML = predictionQueue.map((item, idx) => {
                 const gradeShort = item.grade;
                 return `<div class="queue-item">
                     <div class="queue-item-info">
-                        <div class="queue-item-meta">${item.league} · ${item.grade} · 2-3球${item.prob23}% · ${item.time}</div>
-                        <div class="queue-item-meta">${item.league} · ${item.grade} · ${item.time}</div>
+                        <div class="queue-item-meta">${item.league} · ${item.grade} · 2-3球${item.prob23}% · ${item.matchDate || item.time}</div>
+                        <div class="queue-item-meta">${item.league} · ${item.grade} · ${item.matchDate || item.time}</div>
                     </div>
                     <div style="display:flex;align-items:center;">
                         <span class="queue-item-score">${item.score.toFixed(3)}</span>
@@ -901,10 +931,7 @@
             setInputs(item.inputs);
             editingQueueIndex = index;
 
-            // 切换到添加预测页面
             switchTab('calc');
-
-            // 滚动到顶部
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             alert(`✏️ 正在编辑「${item.match}」\n修改参数后点击"添加到预测列表"即可更新`);
@@ -950,7 +977,6 @@
 
             alert(`✅ 已成功保存 ${count} 场比赛到历史记录！\n\n赛后请打开"历史记录" → "待反馈"标签，逐条输入实际比分。`);
 
-            // 自动切换到历史记录页面
             switchTab('history');
         }
 
@@ -1030,7 +1056,6 @@
                 </div>
             `;
 
-            // Store current edit result
             window._editResult = item.result;
 
             document.getElementById('editModal').classList.add('show');
@@ -1146,25 +1171,16 @@
                 return;
             }
 
-            const gradeClassMap = {
-                'A+ 强烈推荐': 'grade-A-plus',
-                'A 推荐': 'grade-A',
-                'B 可考虑': 'grade-B',
-                'C 谨慎': 'grade-C',
-                'D 不推荐': 'grade-D'
-            };
-
             listEl.innerHTML = filtered.map(h => {
                 const gradeShort = h.grade;
 
-                // 待反馈的比赛显示输入框
                 if (h.result === null) {
                     return `<div class="pending-card">
                         <div class="pending-card-header">
                             <span class="pending-card-match">${h.match}</span>
                             <span class="pending-card-grade ${h.gradeClass}">${gradeShort}</span>
                         </div>
-                        <div class="pending-card-meta">${h.league} · 预测评分 ${h.score.toFixed(3)} · 2-3球${h.prob23}% · ${h.time}</div>
+                        <div class="pending-card-meta">${h.league} · 预测评分 ${h.score.toFixed(3)} · 2-3球${h.prob23}% · ${h.matchDate || h.time}</div>
                         <div class="score-input-row" style="margin-bottom:10px;">
                             <input type="number" id="actualHome_${h.id}" placeholder="主队" min="0" style="flex:1;text-align:center;font-size:16px;font-weight:600;">
                             <div class="score-separator">:</div>
@@ -1177,7 +1193,6 @@
                     </div>`;
                 }
 
-                // 已反馈的比赛显示结果 + 操作按钮
                 let resultHtml = '';
                 if (h.isHit) {
                     resultHtml = `<span class="history-result result-hit">✅ 命中 ${h.actualScore}</span>`;
@@ -1189,7 +1204,7 @@
                     <div class="history-item-header">
                         <div>
                             <div class="history-match">${h.match}</div>
-                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · 2-3球${h.prob23}% · ${h.time}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${h.league} · 2-3球${h.prob23}% · ${h.matchDate || h.time}</div>
                         </div>
                         <div style="display:flex;align-items:center;">
                             <span class="history-score">${h.score.toFixed(3)}</span>
@@ -1252,6 +1267,10 @@
                     el.value = '';
                 }
             });
+            // 重置日期和自定义联赛
+            document.getElementById('matchDate').value = '';
+            document.getElementById('customLeague').value = '';
+            document.getElementById('customLeagueGroup').style.display = 'none';
             if (clearResult) {
                 document.getElementById('result').classList.remove('show');
                 currentPreview = null;
@@ -1277,13 +1296,11 @@
             }
         }
 
-        // 数据迁移：从v2版本迁移到v3
         function migrateData() {
             const oldData = localStorage.getItem('goals23_history_v2');
             if (oldData && !localStorage.getItem('goals23_history_v3')) {
                 try {
                     const oldHistory = JSON.parse(oldData);
-                    // 为旧数据添加id
                     oldHistory.forEach(h => {
                         if (!h.id) h.id = Date.now() + Math.random().toString(36).substr(2, 9);
                     });
@@ -1294,14 +1311,14 @@
                 }
             }
         }
-                function autoRecommendOuAhLink() {
+
+        function autoRecommendOuAhLink() {
             const ahLine = document.getElementById('ahLine').value;
             const ouLine = document.getElementById('ouLine').value;
             const ouAhLink = document.getElementById('ouAhLink');
             
             if (!ahLine || !ouLine) return;
             
-            // Parse ouLine value
             let ouValue = 2.5;
             if (ouLine.includes('/')) {
                 const parts = ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
@@ -1310,7 +1327,6 @@
                 ouValue = parseFloat(ouLine.replace(/[^0-9.]/g, '')) || 2.5;
             }
             
-            // Determine depth of ahLine
             const deepLines = ['一球', '一球/球半', '球半', '球半/两球', '两球+'];
             const shallowLines = ['平手', '平手/半球'];
             const midLines = ['半球', '半球/一球'];
@@ -1344,12 +1360,10 @@
                 reason = '中等让球+标准球盘，标准配置';
             }
             
-            // Only auto-select if current value is the default
             if (ouAhLink.value === '中让+标准球盘') {
                 ouAhLink.value = recommend;
             }
             
-            // Show hint
             const label = document.querySelector('label[for=\"ouAhLink\"]') || document.querySelector('#ouAhLink').closest('.form-group').querySelector('.form-label');
             let hint = label.querySelector('.auto-hint');
             if (!hint) {
@@ -1365,6 +1379,18 @@
             migrateData();
             updateStats();
             updateQueueDisplay();
+
+            // 监听联赛下拉变化
+            const leagueSelect = document.getElementById('league');
+            leagueSelect.addEventListener('change', function() {
+                const customGroup = document.getElementById('customLeagueGroup');
+                if (this.value === '其他') {
+                    customGroup.style.display = 'block';
+                } else {
+                    customGroup.style.display = 'none';
+                    document.getElementById('customLeague').value = '';
+                }
+            });
         };
     </script>
 </body>
