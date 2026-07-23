@@ -250,7 +250,7 @@
             <div class="card">
                 <div class="card-title">
                     <span class="icon" style="background:#E8F5E9;">📈</span>
-                    球队数据（近5场场均）
+                    球队数据（近10场场均）
                 </div>
 
                 <div class="input-row">
@@ -647,36 +647,68 @@
             totalScore = Math.round(totalScore * 1000) / 1000;
 
             let grade, gradeClass, prob23, probOver, probUnder, recText, recClass;
+            // ===== 步骤1：根据原始评分设定基础概率 =====
             if (totalScore >= 0.85) {
-                grade = 'A+ 强烈推荐';
-                gradeClass = 'grade-A-plus';
                 prob23 = 55; probOver = 30; probUnder = 15;
-                recText = '✅ 强烈推荐投注2-3球！这场比赛的各项指标高度匹配2-3球模型，概率极高。建议重点关注。';
+                recText = '✅ 强烈推荐投注2-3球！各项指标高度匹配，概率极高。';
                 recClass = 'rec-green';
             } else if (totalScore >= 0.75) {
-                grade = 'A 推荐';
-                gradeClass = 'grade-A';
                 prob23 = 48; probOver = 35; probUnder = 17;
-                recText = '✓ 推荐投注2-3球。比赛条件较好，2-3球概率较高。可以正常投注。';
+                recText = '✓ 推荐投注2-3球。比赛条件较好，可以正常投注。';
                 recClass = 'rec-green';
             } else if (totalScore >= 0.65) {
-                grade = 'B 可考虑';
-                gradeClass = 'grade-B';
                 prob23 = 42; probOver = 39; probUnder = 19;
-                recText = '△ 可考虑投注，但需谨慎。2-3球概率中等，建议小额试探或观察临场变化。';
+                recText = '△ 可考虑投注，建议小额试探或观察临场变化。';
                 recClass = 'rec-yellow';
             } else if (totalScore >= 0.55) {
-                grade = 'C 谨慎';
-                gradeClass = 'grade-C';
                 prob23 = 35; probOver = 45; probUnder = 20;
-                recText = '⚠️ 谨慎对待。2-3球概率偏低，偏离风险较高。不建议单独投注。';
+                recText = '⚠️ 谨慎对待。不建议单独投注。';
                 recClass = 'rec-yellow';
             } else {
-                grade = 'D 不推荐';
-                gradeClass = 'grade-D';
                 prob23 = 25; probOver = 50; probUnder = 25;
-                recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
+                recText = '❌ 不推荐投注。建议放弃。';
                 recClass = 'rec-red';
+            }
+
+            // ===== 步骤2：大小球盘口二次修正（保留此逻辑，让概率产生55%和60%的区别） =====
+            let ouLineValue = 2.5;
+            if (inputs.ouLine.includes('/')) {
+                const parts = inputs.ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
+                ouLineValue = parts.length === 2 ? (parts[0] + parts[1]) / 2 : (parts[0] || 2.5);
+            } else {
+                ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
+            }
+            if (ouLineValue >= 3) {
+                prob23 -= 10;
+                probOver += 8;
+                probUnder += 2;
+            } else if (ouLineValue <= 2.25) {
+                prob23 += 5;
+                probOver -= 3;
+                probUnder -= 2;
+            }
+
+            // ===== 步骤3：根据最终修正后的概率，显示对应的等级（55%显示A+，60%显示A++） =====
+            if (prob23 >= 60) {
+                grade = 'A++';
+                gradeClass = 'grade-A-plus';
+                recText = '🔥 顶级推荐！盘口条件完美，2-3球概率高达60%以上！';
+            } else if (prob23 >= 55) {
+                grade = 'A+';
+                gradeClass = 'grade-A';
+                recText = '✅ 强烈推荐！盘口条件良好，2-3球概率极高。';
+            } else if (prob23 >= 48) {
+                grade = 'A';
+                gradeClass = 'grade-A';
+            } else if (prob23 >= 42) {
+                grade = 'B';
+                gradeClass = 'grade-B';
+            } else if (prob23 >= 35) {
+                grade = 'C';
+                gradeClass = 'grade-C';
+            } else {
+                grade = 'D';
+                gradeClass = 'grade-D';
             }
             
             // (已删除盘口二次修正逻辑，避免概率倒挂，仅靠15%->20%权重调节)
@@ -818,7 +850,7 @@
             };
 
             listEl.innerHTML = predictionQueue.map((item, idx) => {
-                const gradeShort = item.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D');
+                const gradeShort = item.grade;
                 return `<div class="queue-item">
                     <div class="queue-item-info">
                         <div class="queue-item-meta">${item.league} · ${item.grade} · 2-3球${item.prob23}% · ${item.time}</div>
@@ -826,7 +858,7 @@
                     </div>
                     <div style="display:flex;align-items:center;">
                         <span class="queue-item-score">${item.score.toFixed(3)}</span>
-                        <span class="history-grade ${gradeClassMap[item.grade] || 'grade-B'}" style="margin-right:8px;">${gradeShort}</span>
+                        <span class="history-grade ${item.gradeClass}" style="margin-right:8px;">${gradeShort}</span>
                         <div class="queue-item-actions">
                             <button class="queue-item-btn" onclick="editQueueItem(${idx})">✏️</button>
                             <button class="queue-item-delete" onclick="removeFromQueue(${idx})">🗑️</button>
@@ -1097,14 +1129,14 @@
             };
 
             listEl.innerHTML = filtered.map(h => {
-                const gradeShort = h.grade.replace(' 强烈推荐','+').replace(' 推荐','').replace(' 可考虑','B').replace(' 谨慎','C').replace(' 不推荐','D');
+                const gradeShort = h.grade;
 
                 // 待反馈的比赛显示输入框
                 if (h.result === null) {
                     return `<div class="pending-card">
                         <div class="pending-card-header">
                             <span class="pending-card-match">${h.match}</span>
-                            <span class="pending-card-grade ${gradeClassMap[h.grade] || 'grade-B'}">${gradeShort}</span>
+                            <span class="pending-card-grade ${h.gradeClass}">${gradeShort}</span>
                         </div>
                         <div class="pending-card-meta">${h.league} · 预测评分 ${h.score.toFixed(3)} · 2-3球${h.prob23}% · ${h.time}</div>
                         <div class="score-input-row" style="margin-bottom:10px;">
@@ -1135,7 +1167,7 @@
                         </div>
                         <div style="display:flex;align-items:center;">
                             <span class="history-score">${h.score.toFixed(3)}</span>
-                            <span class="history-grade ${gradeClassMap[h.grade] || 'grade-B'}">${gradeShort}</span>
+                            <span class="history-grade ${h.gradeClass}">${gradeShort}</span>
                             ${resultHtml}
                         </div>
                     </div>
