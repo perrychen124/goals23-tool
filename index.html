@@ -590,7 +590,7 @@
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.80},
                     {min:2.0, max:10, score:0.35}
                 ]),
-                weight: 0.08
+                weight: 0.06   // 从0.08降至0.06，平衡总权重
             };
 
             scores['客队防守'] = {
@@ -599,7 +599,7 @@
                     {min:1.0, max:1.5, score:0.95}, {min:1.5, max:2.0, score:0.85},
                     {min:2.0, max:10, score:0.40}
                 ]),
-                weight: 0.08
+                weight: 0.06   // 从0.08降至0.06，平衡总权重
             };
 
             scores['历史交锋'] = {
@@ -613,7 +613,7 @@
 
             scores['大小球盘口'] = {
                 score: scoringConfig.ouLines[inputs.ouLine] || 0.90,
-                weight: 0.15
+                weight: 0.20   // 从15%提升至20%，强化盘口决策力
             };
 
             scores['让球盘口'] = {
@@ -628,7 +628,7 @@
 
             scores['战意赛程'] = {
                 score: scoringConfig.contexts[inputs.context] || 0.90,
-                weight: 0.07
+                weight: 0.06   // 从0.07降至0.06，平衡总权重
             };
 
             let totalScore = 0;
@@ -678,23 +678,8 @@
                 recText = '❌ 不推荐投注2-3球。比赛条件与2-3球模型严重不匹配，偏离风险极高。建议放弃。';
                 recClass = 'rec-red';
             }
-
-            let ouLineValue = 2.5;
-            if (inputs.ouLine.includes('/')) {
-                const parts = inputs.ouLine.split('/').map(p => parseFloat(p.replace(/[^0-9.]/g, ''))).filter(n => !isNaN(n));
-                ouLineValue = parts.length === 2 ? (parts[0] + parts[1]) / 2 : (parts[0] || 2.5);
-            } else {
-                ouLineValue = parseFloat(inputs.ouLine.replace(/[^0-9.]/g, '')) || 2.5;
-            }
-            if (ouLineValue >= 3) {
-                prob23 -= 10;
-                probOver += 8;
-                probUnder += 2;
-            } else if (ouLineValue <= 2.25) {
-                prob23 += 5;
-                probOver -= 3;
-                probUnder -= 2;
-            }
+            
+            // (已删除盘口二次修正逻辑，避免概率倒挂，仅靠15%->20%权重调节)
 
             return {
                 score: totalScore,
