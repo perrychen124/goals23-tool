@@ -318,13 +318,15 @@
                     <label class="form-label">大小球盘口<span class="required">*</span><span class="hint">2/2.5球最佳</span></label>
                     <select id="ouLine" onchange="autoRecommendOuAhLink()">
                         <option value="">请选择</option>
-                        <option value="1.5/2球">1.5/2球</option>
-                        <option value="2球">2球</option>
-                        <option value="2/2.5球">2/2.5球（强烈推荐）</option>
-                        <option value="2.5球">2.5球（推荐）</option>
-                        <option value="2.5/3球">2.5/3球</option>
-                        <option value="3球">3球</option>
-                        <option value="3/3.5球">3/3.5球（不推荐）</option>
+                        <option value="平手">平手</option>
+                        <option value="平手/半球">平手/半球（强烈推荐）</option>   <!-- ✅ 移到平半 -->
+                        <option value="半球">半球</option>   <!-- ✅ 去掉强烈推荐 -->
+                        <option value="半球/一球">半球/一球（风险高）</option>   <!-- ✅ 加风险提示 -->
+                        <option value="一球">一球</option>
+                        <option value="一球/球半">一球/球半（风险高）</option>   <!-- ✅ 加风险提示 -->
+                        <option value="球半">球半（不推荐）</option>
+                        <option value="球半/两球">球半/两球（不推荐）</option>
+                        <option value="两球+">两球+（不推荐）</option>
                     </select>
                 </div>
 
@@ -333,14 +335,14 @@
                     <select id="ahLine" onchange="autoRecommendOuAhLink()">
                         <option value="">请选择</option>
                         <option value="平手">平手</option>
-                        <option value="平手/半球">平手/半球</option>
-                        <option value="半球">半球（强烈推荐）</option>
-                        <option value="半球/一球">半球/一球</option>
+                        <option value="平手/半球">平手/半球（强烈推荐）</option>
+                        <option value="半球">半球</option>
+                        <option value="半球/一球">半球/一球（风险高）</option>
                         <option value="一球">一球</option>
-                        <option value="一球/球半">一球/球半</option>
-                        <option value="球半">球半</option>
-                        <option value="球半/两球">球半/两球</option>
-                        <option value="两球+">两球+</option>
+                        <option value="一球/球半">一球/球半（风险高）</option>
+                        <option value="球半">球半（不推荐）</option>
+                        <option value="球半/两球">球半/两球（不推荐）</option>
+                        <option value="两球+">两球+（不推荐）</option>
                     </select>
                 </div>
 
